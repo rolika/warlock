@@ -28,6 +28,7 @@ void status(player*); /* display player status */
 int menu_of(int, ...); /* display a menu listed in the arguments */
 void create(player*); /* create a new player according to the game rules */
 int roll_dice(int); /* roll an n-sided dice */
+void save(player*); /* save player's attributes to file as csv's */
 
 struct item {
     char name[NAME_LENGTH];
@@ -73,6 +74,7 @@ int main() {
         switch (menu_of(5, CREATE_NEW_PLAYER, FIGHT, INVENTORY, ENEMIES, ROLL_DICE)) {
             case 1:
                 create(&player);
+                save(&player);
                 break;
             case 2:
                 puts(FIGHT);
@@ -158,4 +160,22 @@ void create(player *player) {
 
 int roll_dice(int n) {
     return rand() % n + 1;
+}
+
+void save(player *player) {
+    FILE *fp;
+
+    if ((fp = fopen(SAVEFILE, "w")) != NULL) {
+        /* saving basic attributes in the first line */
+        fprintf(fp, "%s;%d;%d;%d;%d;%d;%d\n",
+            player->name, player->dp, player->hp, player->lp,
+            player->initial_dp, player->initial_hp, player->initial_lp);
+        fclose(fp);
+    } else {
+        puts("Some really nasty error occured.");
+        puts("Unable to save to file.");
+        exit(1);
+    }
+
+    
 }

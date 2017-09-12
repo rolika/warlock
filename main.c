@@ -1,6 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define SAVEFILE "player.dat"
+#define TITLE "A  T Ű Z H E G Y   V A R Á Z S L Ó J A"
+#define LINE "--------------------------------------------------------------------------------"
+#define TAGGED_LINE "--------------------------+-----------------+----------------+------------------"
+
 
 enum {
     NAME_LENGTH = 32
@@ -11,6 +16,8 @@ typedef struct enemy enemy;
 typedef struct player player;
 
 void load(player*);
+void title(char*);
+void status(player*);
 
 struct item {
     char name[NAME_LENGTH];
@@ -46,10 +53,15 @@ struct player {
 int main() {
     player player = {};
     load(&player);
+
+    system("clear");
+    title(TITLE);
+    status(&player);
+
     return 0;
 }
 
-/* load player save file is present */
+/* load player save file if present */
 void load(player *player) {
     FILE *fp;
     fp = fopen(SAVEFILE, "r");
@@ -59,4 +71,19 @@ void load(player *player) {
     } else {
         puts("Player file not found yet.");
     }
+}
+
+/* display title */
+void title(char *title) {
+    system("clear");
+    puts(LINE);
+    printf("%60s\n", title);
+}
+
+/* display player status */
+void status(player* player) {
+    puts(TAGGED_LINE);
+    printf("Kalandor: %15s | Ügyesség: %2d/%2d | Életerő: %2d/%2d | Szerencse:  %2d/%2d\n",
+    player->name, player->dp, player->initial_dp, player->hp, player->initial_hp, player->lp, player->initial_lp);
+    puts(TAGGED_LINE);
 }

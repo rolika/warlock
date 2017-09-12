@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <time.h>
+#include <string.h>
 
 #define SAVEFILE "player.dat"
 #define TITLE "A  T Ű Z H E G Y   V A R Á Z S L Ó J A"
@@ -29,6 +30,11 @@ int menu_of(int, ...); /* display a menu listed in the arguments */
 void create(player*); /* create a new player according to the game rules */
 int roll_dice(int); /* roll an n-sided dice */
 void save(player*); /* save player's attributes to file as csv's */
+item *new(char*, int, int, int, int, int, int); /* create new item */
+item *take(item*, item*); /* add item to inventory (to a linked list) */
+item* setup(item*); /* setup default inventory according to game rules */
+void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all elements of inventory */
+void print(item*, char*); /* print item of the inventory using given format */
 
 struct item {
     char name[NAME_LENGTH];
@@ -74,13 +80,14 @@ int main() {
         switch (menu_of(5, CREATE_NEW_PLAYER, FIGHT, INVENTORY, ENEMIES, ROLL_DICE)) {
             case 1:
                 create(&player);
+                player.inventory = setup(player.inventory);
                 save(&player);
                 break;
             case 2:
                 puts(FIGHT);
                 break;
             case 3:
-                puts(INVENTORY);
+                apply(player.inventory, print, "%s\n");
                 break;
             case 4:
                 puts(ENEMIES);
@@ -178,4 +185,48 @@ void save(player *player) {
     }
 
     
+}
+
+item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, int mod_hp, int mod_lp) {
+    item *newitem;
+    newitem = malloc(sizeof(item));
+    if (newitem != NULL) {
+        strcpy(newitem->name, name);
+        newitem->quantity = quantity;
+        newitem->initial_charge = initial_charge;
+        newitem->charge = charge;
+        newitem->mod_dp = mod_dp;
+        newitem->mod_hp = mod_hp;
+        newitem->mod_lp = mod_lp;
+        return newitem;
+    } else {
+        puts("Some really nasty error occured.");
+        puts("Unable allocate enough memory.");
+        exit(1);
+    }
+}
+
+item *take(item *head, item *newitem) {
+    newitem->next = head; // add item to the front of list (as new first item)
+    return newitem;
+}
+
+item *setup(item* head) {
+    head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
+    head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
+    head = take(head, new("arany", 0, -1, -1, 0, 0, 0)); /* add empty pouch */
+    head = take(head, new("drágakő", 0, -1, -1, 0, 0, 0));
+    head = take(head, new("élelem", 10, 1, 1, 0, 4, 0)); /* add ten units of food */
+    return head;
+}
+
+void apply(item* head, void (*fn) (item*, char*), char* arg) {
+    item *p; // preserve head
+    for (p = head; p != NULL; p = p->next) {
+        (*fn)(p, arg);
+    }
+}
+
+void print(item *head, char *fmt) {
+    printf(fmt, head->name);
 }

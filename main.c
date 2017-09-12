@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <time.h>
 
 #define SAVEFILE "player.dat"
 #define TITLE "A  T Ű Z H E G Y   V A R Á Z S L Ó J A"
@@ -17,14 +18,16 @@ enum {
     NAME_LENGTH = 32
 };
 
-typedef struct item item;
-typedef struct enemy enemy;
-typedef struct player player;
+typedef struct item item; /* describe an item in the inventory */
+typedef struct enemy enemy; /* describe a defeated enemy */
+typedef struct player player; /* describe the player character */
 
-void load(player*);
-void title(char*);
-void status(player*);
-int menu_of(int, ...);
+void load(player*); /* load player save file if present */
+void title(char*); /* display title */
+void status(player*); /* display player status */
+int menu_of(int, ...); /* display a menu listed in the arguments */
+void create(player*); /* create a new player according to the game rules */
+int roll_dice(int); /* roll an n-sided dice */
 
 struct item {
     char name[NAME_LENGTH];
@@ -58,16 +61,18 @@ struct player {
 
 
 int main() {
+    srand(time(NULL));
     player player = {};
     load(&player);
 
+    /* main menu */
     while (1) {
         system("clear");
         title(TITLE);
         status(&player);
         switch (menu_of(5, CREATE_NEW_PLAYER, FIGHT, INVENTORY, ENEMIES, ROLL_DICE)) {
             case 1:
-                puts(CREATE_NEW_PLAYER);
+                create(&player);
                 break;
             case 2:
                 puts(FIGHT);
@@ -90,7 +95,6 @@ int main() {
     return 0;
 }
 
-/* load player save file if present */
 void load(player *player) {
     FILE *fp;
     fp = fopen(SAVEFILE, "r");
@@ -102,14 +106,11 @@ void load(player *player) {
     }
 }
 
-/* display title */
 void title(char *title) {
-    system("clear");
     puts(LINE);
     printf("%60s\n", title);
 }
 
-/* display player status */
 void status(player* player) {
     puts(TAGGED_LINE);
     printf("Kalandor: %15s | Ügyesség: %2d/%2d | Életerő: %2d/%2d | Szerencse:  %2d/%2d\n",
@@ -117,7 +118,6 @@ void status(player* player) {
     puts(TAGGED_LINE);
 }
 
-/* display a menu listed in the arguments */
 int menu_of(int argc, ...) {
     int i, choice;
     va_list menup;
@@ -136,4 +136,26 @@ int menu_of(int argc, ...) {
             return choice;
         }
     }
+}
+
+void create(player *player) {
+    system("clear");
+    status(player);
+
+    printf("Mi a neved, kalandor? ");
+    scanf("%15s", player->name);
+
+    player->initial_dp = roll_dice(6) + 6;
+    player->dp = player->initial_dp;
+
+    player->initial_hp = roll_dice(6) + roll_dice(6) + 12;
+    player->hp = player->initial_hp;
+
+    player->initial_lp =roll_dice(6) + 6;
+    player->lp = player->initial_lp;
+
+}
+
+int roll_dice(int n) {
+    return rand() % n + 1;
 }

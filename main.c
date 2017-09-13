@@ -253,5 +253,5 @@ void items2csv(item* head, FILE *fp) {
             p->name, p->quantity, p->initial_charge, p->charge, p->mod_dp, p->mod_hp, p->mod_lp);
     }
     fseek(fp, -1, SEEK_CUR); // remove ending semicolon
-    fprintf(fp, "%c\n", '\n');
+    fputc('\n', fp);
 }

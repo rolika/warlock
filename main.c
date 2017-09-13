@@ -36,6 +36,7 @@ item* setup(item*); /* setup default inventory according to game rules */
 void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all items in inventory */
 void print(item*, char*); /* print item of the inventory using given format */
 item *lookup(item*, char*); /* look for item after it's name */
+void items2csv(item*, FILE*); /* convert item data into csv */
 
 struct item {
     char name[NAME_LENGTH];
@@ -174,10 +175,12 @@ void save(player *player) {
     FILE *fp;
 
     if ((fp = fopen(SAVEFILE, "w")) != NULL) {
-        /* saving basic attributes in the first line */
+        /* save basic attributes in the first line */
         fprintf(fp, "%s;%d;%d;%d;%d;%d;%d\n",
             player->name, player->dp, player->hp, player->lp,
             player->initial_dp, player->initial_hp, player->initial_lp);
+        /* save inventory in the second line */
+        items2csv(player->inventory, fp);
         fclose(fp);
     } else {
         puts("Some really nasty error occured.");
@@ -241,4 +244,13 @@ item *lookup(item *head, char *name) {
         return lookup(head->next, name);
     }
     return head;
+}
+
+void items2csv(item* head, FILE *fp) {
+    item *p; // preserve head
+    for (p = head; p != NULL; p = p->next) {
+        fprintf(fp, "%s;%d;%d;%d;%d;%d;%d;",
+            p->name, p->quantity, p->initial_charge, p->charge, p->mod_dp, p->mod_hp, p->mod_lp);
+    }
+    fprintf(fp, "%c\n", '\n');
 }

@@ -33,8 +33,9 @@ void save(player*); /* save player's attributes to file as csv's */
 item *new(char*, int, int, int, int, int, int); /* create new item */
 item *take(item*, item*); /* add item to inventory (to a linked list) */
 item* setup(item*); /* setup default inventory according to game rules */
-void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all elements of inventory */
+void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all items in inventory */
 void print(item*, char*); /* print item of the inventory using given format */
+item *lookup(item*, char*); /* look for item after it's name */
 
 struct item {
     char name[NAME_LENGTH];
@@ -87,7 +88,7 @@ int main() {
                 puts(FIGHT);
                 break;
             case 3:
-                apply(player.inventory, print, "%s\n");
+                apply(player.inventory, print, "%s: %2d db\n");
                 break;
             case 4:
                 puts(ENEMIES);
@@ -207,15 +208,20 @@ item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, 
 }
 
 item *take(item *head, item *newitem) {
-    newitem->next = head; // add item to the front of list (as new first item)
-    return newitem;
+    item *exist = lookup(head, newitem->name);
+    if (exist == NULL) {
+        newitem->next = head; // add item to the front of list (as new first item)
+        return newitem;
+    } else {
+        exist->quantity += newitem->quantity; // increase quantity
+        return head; // head is untouched
+    }
 }
 
 item *setup(item* head) {
     head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
     head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
-    head = take(head, new("arany", 0, -1, -1, 0, 0, 0)); /* add empty pouch */
-    head = take(head, new("drágakő", 0, -1, -1, 0, 0, 0));
+    head = take(head, new("kard", 1, -1, -1, 0, 0, 0));
     head = take(head, new("élelem", 10, 1, 1, 0, 4, 0)); /* add ten units of food */
     return head;
 }
@@ -228,5 +234,12 @@ void apply(item* head, void (*fn) (item*, char*), char* arg) {
 }
 
 void print(item *head, char *fmt) {
-    printf(fmt, head->name);
+    printf(fmt, head->name, head->quantity);
+}
+
+item *lookup(item *head, char *name) {
+    if (head != NULL && strcmp(head->name, name)) {
+        return lookup(head->next, name);
+    }
+    return head;
 }

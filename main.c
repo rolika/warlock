@@ -30,7 +30,7 @@ int menu_of(int, ...); /* display a menu listed in the arguments */
 void create(player*); /* create a new player according to the game rules */
 int roll_dice(int); /* roll an n-sided dice */
 void save(player*); /* save player's attributes to file as csv's */
-item *new(char*, int, int, int, int, int, int); /* create new item */
+item *new(char*, int, int, int, int, int); /* create new item */
 item *take(item*, item*); /* add item to inventory (to a linked list) */
 item* setup(item*); /* setup default inventory according to game rules */
 void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all items in inventory */
@@ -188,14 +188,14 @@ void save(player *player) {
     
 }
 
-item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, int mod_hp, int mod_lp) {
+item *new(char *name, int quantity, int initial_charge, int mod_dp, int mod_hp, int mod_lp) {
     item *newitem;
     newitem = malloc(sizeof(item));
     if (newitem != NULL) {
         strcpy(newitem->name, name);
         newitem->quantity = quantity;
         newitem->initial_charge = initial_charge;
-        newitem->charge = charge;
+        newitem->charge = initial_charge;
         newitem->mod_dp = mod_dp;
         newitem->mod_hp = mod_hp;
         newitem->mod_lp = mod_lp;
@@ -219,10 +219,9 @@ item *take(item *head, item *newitem) {
 }
 
 item *setup(item* head) {
-    head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
-    head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
-    head = take(head, new("kard", 1, -1, -1, 0, 0, 0));
-    head = take(head, new("élelem", 10, 1, 1, 0, 4, 0)); /* add ten units of food */
+    head = new("kard", 1, -1, 0, 0, 0); /* add sword */
+    head = take(head, new("bőrpáncél", 1, -1, 0, 0, 0)); /* add leather armour */
+    head = take(head, new("élelem", 10, 1, 0, 4, 0)); /* add ten units of food */
     return head;
 }
 

@@ -16,7 +16,9 @@
 
 
 enum {
-    NAME_LENGTH = 32
+    NAME_LENGTH = 32,
+    MAX_LINE = 1000,
+    MAX_CSV_FIELD = 100
 };
 
 typedef struct item item; /* describe an item in the inventory */
@@ -30,13 +32,15 @@ int menu_of(int, ...); /* display a menu listed in the arguments */
 void create(player*); /* create a new player according to the game rules */
 int roll_dice(int); /* roll an n-sided dice */
 void save(player*); /* save player's attributes to file as csv's */
-item *new(char*, int, int, int, int, int); /* create new item */
+item *new(char*, int, int, int, int, int, int); /* create new item */
 item *take(item*, item*); /* add item to inventory (to a linked list) */
 item* setup(item*); /* setup default inventory according to game rules */
 void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all items in inventory */
 void print(item*, char*); /* print item of the inventory using given format */
 item *lookup(item*, char*); /* look for item after it's name */
 void items2csv(item*, FILE*); /* convert item data into csv */
+int getcsv(FILE*); /* get a csv line from file */
+void free_inventory(item*); /* delete all items in the inventory (before restore) */
 
 struct item {
     char name[NAME_LENGTH];
@@ -68,6 +72,8 @@ struct player {
     enemy *enemies; // deto
 };
 
+char csvbuffer[MAX_LINE];
+char *csvfield[MAX_CSV_FIELD];
 
 int main() {
     srand(time(NULL));
@@ -108,12 +114,40 @@ int main() {
 
 void load(player *player) {
     FILE *fp;
+    char **p;
+    int n;
+    char name[NAME_LENGTH];
+    int quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp;
     fp = fopen(SAVEFILE, "r");
     if (fp != NULL) {
-        // load file
+        /* restore player's attributes */
+        getcsv(fp);
+        p = csvfield;
+        strcpy(player->name, *p);
+        player->dp = atoi(*++p);
+        player->hp = atoi(*++p);
+        player->lp = atoi(*++p);
+        player->initial_dp = atoi(*++p);
+        player->initial_hp = atoi(*++p);
+        player->initial_lp = atoi(*++p);
+        /* restore inventory */
+        free_inventory(player->inventory);
+        n = getcsv(fp) / 7; /* an item has seven attributes */
+        p = csvfield;
+        while (n--) {
+            strcpy(name, *p++);
+            quantity = atoi(*p++);
+            initial_charge = atoi(*p++);
+            charge = atoi(*p++);
+            mod_dp = atoi(*p++);
+            mod_hp = atoi(*p++);
+            mod_lp= atoi(*p++);
+            player->inventory = take(player->inventory, new(name, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp));
+            /*player->inventory = take(player->inventory, new(
+                *p++, atoi(*p++), atoi(*p++), atoi(*p++), atoi(*p++), atoi(*p++), atoi(*p++)
+            ));*/
+        }
         fclose(fp);
-    } else {
-        puts("Player file not found yet.");
     }
 }
 
@@ -191,14 +225,14 @@ void save(player *player) {
     
 }
 
-item *new(char *name, int quantity, int initial_charge, int mod_dp, int mod_hp, int mod_lp) {
+item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, int mod_hp, int mod_lp) {
     item *newitem;
     newitem = malloc(sizeof(item));
     if (newitem != NULL) {
         strcpy(newitem->name, name);
         newitem->quantity = quantity;
         newitem->initial_charge = initial_charge;
-        newitem->charge = initial_charge;
+        newitem->charge = charge;
         newitem->mod_dp = mod_dp;
         newitem->mod_hp = mod_hp;
         newitem->mod_lp = mod_lp;
@@ -222,9 +256,9 @@ item *take(item *head, item *newitem) {
 }
 
 item *setup(item* head) {
-    head = new("kard", 1, -1, 0, 0, 0); /* add sword */
-    head = take(head, new("bőrpáncél", 1, -1, 0, 0, 0)); /* add leather armour */
-    head = take(head, new("élelem", 10, 1, 0, 4, 0)); /* add ten units of food */
+    head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
+    head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
+    head = take(head, new("élelem", 10, 1, 1, 0, 4, 0)); /* add ten units of food */
     return head;
 }
 
@@ -254,4 +288,23 @@ void items2csv(item* head, FILE *fp) {
     }
     fseek(fp, -1, SEEK_CUR); // remove ending semicolon
     fputc('\n', fp);
+}
+
+int getcsv(FILE *fp) {
+    int n = 0;
+    char *p, *q;
+    if (fgets(csvbuffer, sizeof(csvbuffer), fp) == NULL) {
+        return -1;
+    }
+    for (q = csvbuffer; (p = strtok(q, ";")) != NULL; q = NULL) {
+        csvfield[n++] = p;
+    }
+    return n;
+}
+
+void free_inventory(item *head) {
+    if (head != NULL) {
+        free_inventory(head->next);
+    }
+    free(head);
 }

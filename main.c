@@ -40,7 +40,15 @@ void print(item*, char*); /* print item of the inventory using given format */
 item *lookup(item*, char*); /* look for item after it's name */
 void items2csv(item*, FILE*); /* convert item data into csv */
 int getcsv(FILE*); /* get a csv line from file */
-void free_inventory(item*); /* delete all items in the inventory (before restore) */
+void free_inventory(item*); /* delete all items in the inventory (before load) */
+
+/* TODO:
+    choose & add potion
+    inventory menu
+     - consume potion or food (= use any item with a non-negative charge value)
+     - drop item (considering first decreasing quantity)
+     - take new item
+*/
 
 struct item {
     char name[NAME_LENGTH];
@@ -114,10 +122,8 @@ int main() {
 
 void load(player *player) {
     FILE *fp;
-    char **p;
-    int n;
-    char name[NAME_LENGTH];
-    int quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp;
+    char **p, name[NAME_LENGTH];
+    int n, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp;
     fp = fopen(SAVEFILE, "r");
     if (fp != NULL) {
         /* restore player's attributes */

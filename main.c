@@ -8,11 +8,6 @@
 #define TITLE "A  T Ű Z H E G Y   V A R Á Z S L Ó J A"
 #define LINE "--------------------------------------------------------------------------------"
 #define TAGGED_LINE "--------------------------+-----------------+----------------+------------------"
-#define CREATE_NEW_PLAYER "Új játékos indítása"
-#define FIGHT "Harc"
-#define INVENTORY "Felszerelés"
-#define ENEMIES "Ellenségek"
-#define ROLL_DICE "Dobókocka"
 
 
 enum {
@@ -34,16 +29,16 @@ int roll_dice(int); /* roll an n-sided dice */
 void save(player*); /* save player's attributes to file as csv's */
 item *new(char*, int, int, int, int, int, int); /* create new item */
 item *take(item*, item*); /* add item to inventory (to a linked list) */
-item* setup(item*); /* setup default inventory according to game rules */
+item *setup(item*); /* setup default inventory according to game rules */
 void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all items in inventory */
 void print(item*, char*); /* print item of the inventory using given format */
 item *lookup(item*, char*); /* look for item after it's name */
 void items2csv(item*, FILE*); /* convert item data into csv */
 int getcsv(FILE*); /* get a csv line from file */
 void free_inventory(item*); /* delete all items in the inventory (before load) */
+item *potion(item*); /* let the player to choose a potion */
 
 /* TODO:
-    choose & add potion
     inventory menu
      - consume potion or food (= use any item with a non-negative charge value)
      - drop item (considering first decreasing quantity)
@@ -93,23 +88,23 @@ int main() {
         system("clear");
         title(TITLE);
         status(&player);
-        switch (menu_of(5, CREATE_NEW_PLAYER, FIGHT, INVENTORY, ENEMIES, ROLL_DICE)) {
+        switch (menu_of(5, "Új játékos indítása", "Harc", "Felszerelés", "Ellenségek", "Dobókocka")) {
             case 1:
                 create(&player);
                 player.inventory = setup(player.inventory);
                 save(&player);
                 break;
             case 2:
-                puts(FIGHT);
+                puts("harc");
                 break;
             case 3:
                 apply(player.inventory, print, "%s: %2d db\n");
                 break;
             case 4:
-                puts(ENEMIES);
+                puts("ellenségek");
                 break;
             case 5:
-                puts(ROLL_DICE);
+                puts("dobókocka");
                 break;
             case 6:
                 puts("Good bye!");
@@ -262,9 +257,13 @@ item *take(item *head, item *newitem) {
 }
 
 item *setup(item* head) {
+    free_inventory(head);
     head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
     head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
     head = take(head, new("élelem", 10, 1, 1, 0, 4, 0)); /* add ten units of food */
+    puts("Megkaptad a kardodat, a bőrpáncélodat és a tíz adag élelmet.");
+    puts("Válassz egyet a varázsitalok közül!");
+    head = potion(head); /* choose a potion and add to inventory */
     return head;
 }
 
@@ -313,4 +312,19 @@ void free_inventory(item *head) {
         free_inventory(head->next);
     }
     free(head);
+}
+
+item *potion(item *head) {
+    switch (menu_of(3, "Ügyesség", "Életerő", "Szerencse")) {
+        case 1:
+            head = take(head, new("ügyesség-varázsital", 1, 2, 2, 12, 0, 0));
+            break;
+        case 2:
+            head = take(head, new("életerő-varázsital", 1, 2, 2, 0, 24, 0));
+            break;
+        case 3: /* fall through */
+        default:
+            head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, 12));
+    }
+    return head;
 }

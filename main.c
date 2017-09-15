@@ -144,9 +144,6 @@ void load(player *player) {
             mod_hp = atoi(*p++);
             mod_lp= atoi(*p++);
             player->inventory = take(player->inventory, new(name, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp));
-            /*player->inventory = take(player->inventory, new(
-                *p++, atoi(*p++), atoi(*p++), atoi(*p++), atoi(*p++), atoi(*p++), atoi(*p++)
-            ));*/
         }
         fclose(fp);
     }

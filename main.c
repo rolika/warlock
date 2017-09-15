@@ -37,6 +37,7 @@ void items2csv(item*, FILE*); /* convert item data into csv */
 int getcsv(FILE*); /* get a csv line from file */
 void free_inventory(item*); /* delete all items in the inventory (before load) */
 item *potion(item*); /* let the player to choose a potion */
+item *inventory_menu(player*); /* handle the inventory: take, drop, use items */
 
 /* TODO:
     inventory menu
@@ -98,7 +99,7 @@ int main() {
                 puts("harc");
                 break;
             case 3:
-                apply(player.inventory, print, "%s: %2d db\n");
+                player.inventory = inventory_menu(&player);
                 break;
             case 4:
                 puts("ellenségek");
@@ -257,7 +258,7 @@ item *setup(item* head) {
     free_inventory(head);
     head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
     head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
-    head = take(head, new("élelem", 10, 1, 1, 0, 4, 0)); /* add ten units of food */
+    head = take(head, new("élelem", 1, 10, 10, 0, 4, 0)); /* add ten units of food */
     puts("Megkaptad a kardodat, a bőrpáncélodat és a tíz adag élelmet.");
     puts("Válassz egyet a varázsitalok közül!");
     head = potion(head); /* choose a potion and add to inventory */
@@ -322,6 +323,45 @@ item *potion(item *head) {
         case 3: /* fall through */
         default:
             head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, 12));
+    }
+    return head;
+}
+
+item *inventory_menu(player *player) {
+    item *p, *head;
+    head = player->inventory;
+    int i, choice;
+    if (head != NULL) {
+        system("clear");
+        puts("Az alábbi tárgyak vannak nálad:");
+        puts(LINE);
+        for (i = 1, p = head; p != NULL; p = p->next, ++i) {
+            printf("[%d] %s: %ddb", i, p->name, p->quantity);
+            if (p->initial_charge > 0) {
+                printf(" %d/%d", p->charge, p->initial_charge);
+            }
+            if (p->mod_dp > 0) {
+                printf(" +%dÜ", p->mod_dp);
+            }
+            if (p->mod_hp > 0) {
+                printf(" +%dÉ", p->mod_hp);
+            }
+            if (p->mod_lp > 0) {
+                printf(" +%dSz", p->mod_lp);
+            }
+            putchar('\n');
+        }
+        printf("[%d] Új felszerelés\n", ++i);
+        printf("[%d] Kilépés\n", ++i);
+        puts(LINE);
+        printf("Válassz egyet és nyomj Enter-t! ");
+        while (1) {
+            choice = getchar() - '1' + 1;
+            if (0 < choice && choice <= i) {
+                break;
+            }
+        }
+        printf("%d-t nyomtál\n", choice);
     }
     return head;
 }

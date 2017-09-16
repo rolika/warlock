@@ -333,10 +333,9 @@ item *potion(item *head) {
 }
 
 item *inventory_menu(player *player) {
-    item *p, *head;
-    head = player->inventory;
+    item *p;
     int i, choice;
-    if (head != NULL) {
+    if (player->inventory != NULL) {
         while (1) {
             i = 0, choice = -1;
             system("clear");
@@ -347,7 +346,7 @@ item *inventory_menu(player *player) {
             printf("[%d] Új felszerelés\n", i++);
 
             /* list all items currently in inventory */
-            for (p = head; p != NULL; p = p->next, ++i) {
+            for (p= player->inventory; p != NULL; p = p->next, ++i) {
                 printf("[%d] %s: %ddb", i, p->name, p->quantity);
                 if (p->initial_charge > 0) {
                     printf(" %d/%d", p->charge, p->initial_charge);
@@ -374,13 +373,14 @@ item *inventory_menu(player *player) {
             if (choice == i) { /* exit inventory menu */
                 break;
             } else if (choice == 0) { /* create and take a new item */
-                head = new2inventory(head);
+                player->inventory = new2inventory(player->inventory);
+                save(player);
             } else { /* proceed to item menu */
                 ;
             }
         }
     }
-    return head;
+    return player->inventory;
 }
 
 item *new2inventory(item *head) {

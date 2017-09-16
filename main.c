@@ -9,13 +9,13 @@
 #define LINE "--------------------------------------------------------------------------------"
 #define TAGGED_LINE "--------------------------+-----------------+----------------+------------------"
 
-#define roll_dice(n) (rand() % (n) + 1)
-
 enum {
     NAME_LENGTH = 32,
     MAX_LINE = 1000,
     MAX_CSV_FIELD = 100
 };
+
+#define roll_dice(n) (rand() % (n) + 1)
 
 typedef struct item item; /* describe an item in the inventory */
 typedef struct enemy enemy; /* describe a defeated enemy */
@@ -38,6 +38,7 @@ int getcsv(FILE*); /* get a csv line from file */
 void free_inventory(item*); /* delete all items in the inventory (before load) */
 item *potion(item*); /* let the player to choose a potion */
 item *inventory_menu(player*); /* handle the inventory: take, drop, use items */
+item *new2inventory(item*); /* create and add a new item to the inventory */
 
 /* TODO:
     inventory menu
@@ -193,7 +194,7 @@ void create(player *player) {
     status(player);
 
     printf("Mi a neved, kalandor? ");
-    scanf("%15s", player->name);
+    scanf("%32s", player->name);
 
     player->initial_dp = roll_dice(6) + 6;
     player->dp = player->initial_dp;
@@ -334,38 +335,72 @@ item *potion(item *head) {
 item *inventory_menu(player *player) {
     item *p, *head;
     head = player->inventory;
-    int i = 0, choice;
+    int i, choice;
     if (head != NULL) {
-        system("clear");
-        puts("Az alábbi lehetőségeid vannak:");
-        puts(LINE);
-        printf("[%d] Új felszerelés\n", i++);
-        for (p = head; p != NULL; p = p->next, ++i) {
-            printf("[%d] %s: %ddb", i, p->name, p->quantity);
-            if (p->initial_charge > 0) {
-                printf(" %d/%d", p->charge, p->initial_charge);
-            }
-            if (p->mod_dp > 0) {
-                printf(" +%dÜ", p->mod_dp);
-            }
-            if (p->mod_hp > 0) {
-                printf(" +%dÉ", p->mod_hp);
-            }
-            if (p->mod_lp > 0) {
-                printf(" +%dSz", p->mod_lp);
-            }
-            putchar('\n');
-        }        
-        printf("[%d] Kilépés\n", i);
-        puts(LINE);
-        printf("Válassz egyet és nyomj Enter-t! ");
         while (1) {
+            i = 0, choice = -1;
+            system("clear");
+            puts("Az alábbi lehetőségeid vannak:");
+            puts(LINE);
+
+            /* option for new equipment */
+            printf("[%d] Új felszerelés\n", i++);
+
+            /* list all items currently in inventory */
+            for (p = head; p != NULL; p = p->next, ++i) {
+                printf("[%d] %s: %ddb", i, p->name, p->quantity);
+                if (p->initial_charge > 0) {
+                    printf(" %d/%d", p->charge, p->initial_charge);
+                }
+                if (p->mod_dp > 0) {
+                    printf(" +%dÜ", p->mod_dp);
+                }
+                if (p->mod_hp > 0) {
+                    printf(" +%dÉ", p->mod_hp);
+                }
+                if (p->mod_lp > 0) {
+                    printf(" +%dSz", p->mod_lp);
+                }
+                putchar('\n');
+            }        
+
+            /* exit from inventory menu */
+            printf("[%d] Kilépés\n", i);
+
+            puts(LINE);
+            printf("Válassz egyet és nyomj Enter-t! ");
             choice = getchar() - '1' + 1;
-            if (0 <= choice && choice <= i) {
+
+            if (choice == i) { /* exit inventory menu */
                 break;
+            } else if (choice == 0) { /* create and take a new item */
+                head = new2inventory(head);
+            } else { /* proceed to item menu */
+                ;
             }
         }
-        printf("%d-t nyomtál\n", choice);
     }
     return head;
+}
+
+item *new2inventory(item *head) {
+    char name[NAME_LENGTH];
+    int quantity, initial_charge, mod_dp, mod_hp, mod_lp;
+
+    system("clear");
+    
+    printf("Kérem a tárgy nevét: ");
+    scanf("%32s", name);
+    printf("Hány darab? ");
+    scanf("%d", &quantity);
+    printf("Töltet (-1, ha nem használódik el): ");
+    scanf("%d", &initial_charge);
+    printf("Ügyesség-módosító: ");
+    scanf("%d", &mod_dp);
+    printf("Életerő-módosító: ");
+    scanf("%d", &mod_hp);
+    printf("Szerencse-módosító: ");
+    scanf("%d", &mod_lp);
+
+    return take(head, new(name, quantity, initial_charge, initial_charge, mod_dp, mod_hp, mod_lp));
 }

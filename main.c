@@ -352,14 +352,14 @@ item *inventory_menu(player *player) {
                 if (p->initial_charge > 0) {
                     printf(" %d/%d", p->charge, p->initial_charge);
                 }
-                if (p->mod_dp > 0) {
-                    printf(" +%dÜ", p->mod_dp);
+                if (p->mod_dp != 0) {
+                    printf(" %+dÜ", p->mod_dp);
                 }
-                if (p->mod_hp > 0) {
-                    printf(" +%dÉ", p->mod_hp);
+                if (p->mod_hp != 0) {
+                    printf(" %+dÉ", p->mod_hp);
                 }
-                if (p->mod_lp > 0) {
-                    printf(" +%dSz", p->mod_lp);
+                if (p->mod_lp != 0) {
+                    printf(" %+dSz", p->mod_lp);
                 }
                 putchar('\n');
             }        

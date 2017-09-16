@@ -30,8 +30,6 @@ void save(player*); /* save player's attributes to file as csv's */
 item *new(char*, int, int, int, int, int, int); /* create new item */
 item *take(item*, item*); /* add item to inventory (to a linked list) */
 item *setup(item*); /* setup default inventory according to game rules */
-void apply(item*, void (*fn) (item*, char*), char*); /* apply function to all items in inventory */
-void print(item*, char*); /* print item of the inventory using given format */
 item *lookup(item*, char*); /* look for item after it's name */
 void items2csv(item*, FILE*); /* convert item data into csv */
 int getcsv(FILE*); /* get a csv line from file */
@@ -390,7 +388,7 @@ item *new2inventory(item *head) {
     system("clear");
     
     printf("Kérem a tárgy nevét: ");
-    scanf("%32s", name);
+    scanf("%s", name);
     printf("Hány darab? ");
     scanf("%d", &quantity);
     printf("Töltet (-1, ha nem használódik el): ");

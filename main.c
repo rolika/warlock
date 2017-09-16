@@ -9,6 +9,7 @@
 #define LINE "--------------------------------------------------------------------------------"
 #define TAGGED_LINE "--------------------------+-----------------+----------------+------------------"
 
+#define roll_dice(n) (rand() % (n) + 1)
 
 enum {
     NAME_LENGTH = 32,
@@ -25,7 +26,6 @@ void title(char*); /* display title */
 void status(player*); /* display player status */
 int menu_of(int, ...); /* display a menu listed in the arguments */
 void create(player*); /* create a new player according to the game rules */
-int roll_dice(int); /* roll an n-sided dice */
 void save(player*); /* save player's attributes to file as csv's */
 item *new(char*, int, int, int, int, int, int); /* create new item */
 item *take(item*, item*); /* add item to inventory (to a linked list) */
@@ -206,10 +206,6 @@ void create(player *player) {
 
     system("clear");
     status(player);
-}
-
-int roll_dice(int n) {
-    return rand() % n + 1;
 }
 
 void save(player *player) {

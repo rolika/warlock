@@ -312,10 +312,11 @@ int getcsv(FILE *fp) {
 }
 
 void free_inventory(item *head) {
-    if (head != NULL) {
-        free_inventory(head->next);
+    item *next;
+    for (; head != NULL; head = next) {
+        next = head->next;
+        free(head);
     }
-    free(head);
 }
 
 item *potion(item *head) {

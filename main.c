@@ -183,12 +183,13 @@ int menu_of(int argc, ...) {
 }
 
 void create(player *player) {
-    system("clear");
     strcpy(player->name, "");
     player->dp = player->initial_dp = 0;
     player->hp = player->initial_hp = 0;
     player->lp = player->initial_lp = 0;
     free_inventory(player->inventory);
+    
+    system("clear");
     status(player);
 
     printf("Mi a neved, kalandor? ");

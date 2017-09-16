@@ -339,7 +339,7 @@ item *inventory_menu(player *player) {
         while (1) {
             i = 0, choice = -1;
             system("clear");
-            puts("Az alábbi lehetőségeid vannak:");
+            puts("választási lehetőségeid:");
             puts(LINE);
 
             /* option for new equipment */
@@ -367,7 +367,7 @@ item *inventory_menu(player *player) {
             printf("[%d] kilépés\n", i);
 
             puts(LINE);
-            choice = toint(answer("Választásod"));
+            choice = toint(answer("választásod"));
 
             if (choice == i) { /* exit inventory menu */
                 break;
@@ -376,10 +376,10 @@ item *inventory_menu(player *player) {
                 save(player);
             } else { /* proceed to item menu */
                 p = player->inventory;
-                while (--i > 0) {
+                while (--choice >= 0) {
+                    printf("elem: %s\n", p->name);
                     p = p->next;
                 }
-                printf("Választásod: %s\n", p->name);
             }
         }
     }

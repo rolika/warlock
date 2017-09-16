@@ -42,7 +42,6 @@ item *new2inventory(item*); /* create and add a new item to the inventory */
     inventory menu
      - consume potion or food (= use any item with a non-negative charge value)
      - drop item (considering first decreasing quantity)
-     - take new item
 */
 
 struct item {
@@ -344,7 +343,7 @@ item *inventory_menu(player *player) {
             printf("[%d] Új felszerelés\n", i++);
 
             /* list all items currently in inventory */
-            for (p= player->inventory; p != NULL; p = p->next, ++i) {
+            for (p = player->inventory; p != NULL; p = p->next, ++i) {
                 printf("[%d] %s: %ddb", i, p->name, p->quantity);
                 if (p->initial_charge > 0) {
                     printf(" %d/%d", p->charge, p->initial_charge);
@@ -374,7 +373,11 @@ item *inventory_menu(player *player) {
                 player->inventory = new2inventory(player->inventory);
                 save(player);
             } else { /* proceed to item menu */
-                ;
+                p = player->inventory;
+                while (--i > 0) {
+                    p = p->next;
+                }
+                printf("Választásod: %s\n", p->name);
             }
         }
     }
@@ -387,8 +390,13 @@ item *new2inventory(item *head) {
 
     system("clear");
     
+    getc(stdin);
     printf("Kérem a tárgy nevét: ");
-    scanf("%s", name);
+    fgets(name, NAME_LENGTH, stdin);
+    if ((strlen(name) > 0) && (name[strlen(name) - 1] == '\n')) {
+        name[strlen (name) - 1] = '\0';
+    }
+    //scanf("%s", name);
     printf("Hány darab? ");
     scanf("%d", &quantity);
     printf("Töltet (-1, ha nem használódik el): ");

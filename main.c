@@ -11,11 +11,13 @@
 
 enum {
     NAME_LENGTH = 32,
+    MAX_ANSWER = 32,
     MAX_LINE = 1000,
     MAX_CSV_FIELD = 100
 };
 
 #define roll_dice(n) (rand() % (n) + 1)
+#define toint(s) ((int) strtol((s), NULL, 10))
 
 typedef struct item item; /* describe an item in the inventory */
 typedef struct enemy enemy; /* describe a defeated enemy */
@@ -37,6 +39,7 @@ void free_inventory(item*); /* delete all items in the inventory (before load) *
 item *potion(item*); /* let the player to choose a potion */
 item *inventory_menu(player*); /* handle the inventory: take, drop, use items */
 item *new2inventory(item*); /* create and add a new item to the inventory */
+char *answer(char*); /* ask player a question, store the answer in the buffer */
 
 /* TODO:
     inventory menu
@@ -75,6 +78,7 @@ struct player {
 };
 
 char csvbuffer[MAX_LINE];
+char answerbuffer[MAX_ANSWER];
 char *csvfield[MAX_CSV_FIELD];
 
 int main() {
@@ -336,6 +340,7 @@ item *inventory_menu(player *player) {
         while (1) {
             i = 0, choice = -1;
             system("clear");
+            //getc(stdin); /* catch newline left over from previous entry (???) */
             puts("Az alábbi lehetőségeid vannak:");
             puts(LINE);
 
@@ -364,8 +369,8 @@ item *inventory_menu(player *player) {
             printf("[%d] Kilépés\n", i);
 
             puts(LINE);
-            printf("Válassz egyet és nyomj Enter-t! ");
-            choice = getchar() - '1' + 1;
+
+            choice = toint(answer("Választásod"));
 
             if (choice == i) { /* exit inventory menu */
                 break;
@@ -389,24 +394,25 @@ item *new2inventory(item *head) {
     int quantity, initial_charge, mod_dp, mod_hp, mod_lp;
 
     system("clear");
+    //getc(stdin); /* catch newline left over from previous entry (???) */
     
-    getc(stdin);
-    printf("Kérem a tárgy nevét: ");
-    fgets(name, NAME_LENGTH, stdin);
-    if ((strlen(name) > 0) && (name[strlen(name) - 1] == '\n')) {
-        name[strlen (name) - 1] = '\0';
-    }
-    //scanf("%s", name);
-    printf("Hány darab? ");
-    scanf("%d", &quantity);
-    printf("Töltet (-1, ha nem használódik el): ");
-    scanf("%d", &initial_charge);
-    printf("Ügyesség-módosító: ");
-    scanf("%d", &mod_dp);
-    printf("Életerő-módosító: ");
-    scanf("%d", &mod_hp);
-    printf("Szerencse-módosító: ");
-    scanf("%d", &mod_lp);
+    strcpy(name, answer("Tárgy neve"));
+    quantity = toint(answer("Mennyiség"));
+    initial_charge = toint(answer("Töltet (-1, ha nem használódik el)"));
+    mod_dp = toint(answer("Ügyesség-módosító"));
+    mod_hp = toint(answer("Életerő-módosító"));
+    mod_lp = toint(answer("Szerencse-módosító"));
 
     return take(head, new(name, quantity, initial_charge, initial_charge, mod_dp, mod_hp, mod_lp));
+}
+
+char *answer(char *question) {
+    int c, i;
+    printf("%s: ", question);
+    while((c = getchar()) != EOF && c != '\n');
+    for (i = 0; i < MAX_ANSWER-1 && (c = getchar()) != EOF && c != '\n'; ++i) {
+        answerbuffer[i] = c;
+    }
+    answerbuffer[i] = '\0';
+    return answerbuffer;
 }

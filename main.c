@@ -175,9 +175,8 @@ int menu_of(int argc, ...) {
     }
     printf("[%d] Kilépés\n", i + 1);
     puts(LINE);
-    printf("Válassz egyet és nyomj Enter-t! ");
     while (1) {
-        choice = getchar() - '1' + 1;
+        choice = toint(answer("Választásod"));
         if (0 < choice && choice <= argc + 1) {
             return choice;
         }
@@ -340,12 +339,11 @@ item *inventory_menu(player *player) {
         while (1) {
             i = 0, choice = -1;
             system("clear");
-            //getc(stdin); /* catch newline left over from previous entry (???) */
             puts("Az alábbi lehetőségeid vannak:");
             puts(LINE);
 
             /* option for new equipment */
-            printf("[%d] Új felszerelés\n", i++);
+            printf("[%d] új felszerelés\n", i++);
 
             /* list all items currently in inventory */
             for (p = player->inventory; p != NULL; p = p->next, ++i) {
@@ -366,10 +364,9 @@ item *inventory_menu(player *player) {
             }        
 
             /* exit from inventory menu */
-            printf("[%d] Kilépés\n", i);
+            printf("[%d] kilépés\n", i);
 
             puts(LINE);
-
             choice = toint(answer("Választásod"));
 
             if (choice == i) { /* exit inventory menu */
@@ -394,25 +391,23 @@ item *new2inventory(item *head) {
     int quantity, initial_charge, mod_dp, mod_hp, mod_lp;
 
     system("clear");
-    //getc(stdin); /* catch newline left over from previous entry (???) */
     
-    strcpy(name, answer("Tárgy neve"));
-    quantity = toint(answer("Mennyiség"));
-    initial_charge = toint(answer("Töltet (-1, ha nem használódik el)"));
-    mod_dp = toint(answer("Ügyesség-módosító"));
-    mod_hp = toint(answer("Életerő-módosító"));
-    mod_lp = toint(answer("Szerencse-módosító"));
+    strcpy(name, answer("tárgy neve"));
+    quantity = toint(answer("mennyiség"));
+    initial_charge = toint(answer("töltet (-1, ha nem használódik el)"));
+    mod_dp = toint(answer("ügyesség-módosító"));
+    mod_hp = toint(answer("életerő-módosító"));
+    mod_lp = toint(answer("szerencse-módosító"));
 
     return take(head, new(name, quantity, initial_charge, initial_charge, mod_dp, mod_hp, mod_lp));
 }
 
 char *answer(char *question) {
-    int c, i;
+    char *p;
     printf("%s: ", question);
-    while((c = getchar()) != EOF && c != '\n');
-    for (i = 0; i < MAX_ANSWER-1 && (c = getchar()) != EOF && c != '\n'; ++i) {
-        answerbuffer[i] = c;
+    fgets(answerbuffer, MAX_ANSWER-1, stdin);
+    if ((p = strchr(answerbuffer, '\n')) != NULL) {
+        *p = '\0';
     }
-    answerbuffer[i] = '\0';
     return answerbuffer;
 }

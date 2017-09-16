@@ -91,7 +91,7 @@ int main() {
         system("clear");
         title(TITLE);
         status(&player);
-        switch (menu_of(5, "Új játékos indítása", "Harc", "Felszerelés", "Ellenségek", "Dobókocka")) {
+        switch (menu_of(5, "új játékos indítása", "harc", "felszerelés", "ellenségek", "dobókocka")) {
             case 1:
                 create(&player);
                 player.inventory = setup(player.inventory);
@@ -159,7 +159,7 @@ void title(char *title) {
 
 void status(player* player) {
     puts(TAGGED_LINE);
-    printf("Kalandor: %15s | Ügyesség: %2d/%2d | Életerő: %2d/%2d | Szerencse:  %2d/%2d\n",
+    printf("kalandor: %15s | ügyesség: %2d/%2d | életerő: %2d/%2d | szerencse:  %2d/%2d\n",
     player->name, player->dp, player->initial_dp, player->hp, player->initial_hp, player->lp, player->initial_lp);
     puts(TAGGED_LINE);
 }
@@ -168,15 +168,15 @@ int menu_of(int argc, ...) {
     int i, choice;
     va_list menup;
     va_start(menup, argc);
-    puts("Választási lehetőségeid:");
+    puts("választási lehetőségeid:");
     puts(LINE);
     for (i = 0; i < argc; ++i) {
         printf("[%d] %s\n", i + 1, va_arg(menup, char*));
     }
-    printf("[%d] Kilépés\n", i + 1);
+    printf("[%d] kilépés\n", i + 1);
     puts(LINE);
     while (1) {
-        choice = toint(answer("Választásod"));
+        choice = toint(answer("választásod"));
         if (0 < choice && choice <= argc + 1) {
             return choice;
         }
@@ -318,7 +318,7 @@ void free_inventory(item *head) {
 }
 
 item *potion(item *head) {
-    switch (menu_of(3, "Ügyesség", "Életerő", "Szerencse")) {
+    switch (menu_of(3, "ügyesség", "életerő", "szerencse")) {
         case 1:
             head = take(head, new("ügyesség-varázsital", 1, 2, 2, 12, 0, 0));
             break;

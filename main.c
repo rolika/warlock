@@ -184,6 +184,11 @@ int menu_of(int argc, ...) {
 
 void create(player *player) {
     system("clear");
+    strcpy(player->name, "");
+    player->dp = player->initial_dp = 0;
+    player->hp = player->initial_hp = 0;
+    player->lp = player->initial_lp = 0;
+    free_inventory(player->inventory);
     status(player);
 
     printf("Mi a neved, kalandor? ");
@@ -198,6 +203,8 @@ void create(player *player) {
     player->initial_lp =roll_dice(6) + 6;
     player->lp = player->initial_lp;
 
+    system("clear");
+    status(player);
 }
 
 int roll_dice(int n) {
@@ -255,7 +262,6 @@ item *take(item *head, item *newitem) {
 }
 
 item *setup(item* head) {
-    free_inventory(head);
     head = new("kard", 1, -1, -1, 0, 0, 0); /* add sword */
     head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
     head = take(head, new("élelem", 1, 10, 10, 0, 4, 0)); /* add ten units of food */

@@ -334,12 +334,13 @@ item *potion(item *head) {
 item *inventory_menu(player *player) {
     item *p, *head;
     head = player->inventory;
-    int i, choice;
+    int i = 0, choice;
     if (head != NULL) {
         system("clear");
-        puts("Az alábbi tárgyak vannak nálad:");
+        puts("Az alábbi lehetőségeid vannak:");
         puts(LINE);
-        for (i = 1, p = head; p != NULL; p = p->next, ++i) {
+        printf("[%d] Új felszerelés\n", i++);
+        for (p = head; p != NULL; p = p->next, ++i) {
             printf("[%d] %s: %ddb", i, p->name, p->quantity);
             if (p->initial_charge > 0) {
                 printf(" %d/%d", p->charge, p->initial_charge);
@@ -354,14 +355,13 @@ item *inventory_menu(player *player) {
                 printf(" +%dSz", p->mod_lp);
             }
             putchar('\n');
-        }
-        printf("[%d] Új felszerelés\n", ++i);
-        printf("[%d] Kilépés\n", ++i);
+        }        
+        printf("[%d] Kilépés\n", i);
         puts(LINE);
         printf("Válassz egyet és nyomj Enter-t! ");
         while (1) {
             choice = getchar() - '1' + 1;
-            if (0 < choice && choice <= i) {
+            if (0 <= choice && choice <= i) {
                 break;
             }
         }

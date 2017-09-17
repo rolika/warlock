@@ -40,10 +40,12 @@ item *potion(item*); /* let the player to choose a potion */
 item *inventory_menu(player*); /* handle the inventory: take, drop, use items */
 item *new2inventory(item*); /* create and add a new item to the inventory */
 char *answer(char*); /* ask player a question, store the answer in the buffer */
+item *itemmenu(player*, int); /* handle items in the inventory */
+item *consume(player*, item*); /* consume an item */
+item *drop(item*, item*); /* drop an item from inventory */
 
 /* TODO:
     inventory menu
-     - consume potion or food (= use any item with a non-negative charge value)
      - drop item (considering first decreasing quantity)
 */
 
@@ -339,6 +341,7 @@ item *inventory_menu(player *player) {
         while (1) {
             i = 0, choice = -1;
             system("clear");
+            status(player);
             puts("választási lehetőségeid:");
             puts(LINE);
 
@@ -375,11 +378,7 @@ item *inventory_menu(player *player) {
                 player->inventory = new2inventory(player->inventory);
                 save(player);
             } else { /* proceed to item menu */
-                p = player->inventory;
-                while (--choice >= 0) {
-                    printf("elem: %s\n", p->name);
-                    p = p->next;
-                }
+                player->inventory = itemmenu(player, choice);
             }
         }
     }
@@ -410,4 +409,68 @@ char *answer(char *question) {
         *p = '\0';
     }
     return answerbuffer;
+}
+
+item *itemmenu(player *player, int choice) {
+    item *p = player->inventory;
+    /* identify item */
+    while (--choice > 0) {
+        p = p->next;
+    }
+    /* bring up item menu */
+    while (1) {
+        system("clear");
+        status(player);
+        puts(p->name);
+        puts(LINE);
+        switch (menu_of(2, "elfogyasztás", "eldobás")) {
+            case 1:
+                player->inventory = consume(player, p);
+                save(player);
+                break;
+            case 2:
+                //player->inventory = drop(player->inventory, p);
+                break;
+            default:
+                return player->inventory;
+
+        }
+    }
+}
+
+item *consume(player *player, item *item) {
+    if (item->charge > -1) { /* only item with a valid charge value can be consumed */
+        --(item->charge);
+        if (item->mod_dp) {
+            player->dp += item->mod_dp;
+            if (player->dp > player->initial_dp) {
+                player->dp = player->initial_dp;
+            }
+        }
+        if (item->mod_hp) {
+            player->hp += item->mod_hp;
+            if (player->hp > player->initial_hp) {
+                player->hp = player->initial_hp;
+            }
+        }
+        if (item->mod_lp) {
+            player->lp += item->mod_lp;
+            if (player->lp > player->initial_lp) {
+                player->lp = player->initial_lp;
+            }
+        }
+        if (strcmp(item->name, "szerencse-varázsital") == 0) {
+            ++(player->initial_lp);
+            player->lp = player->initial_lp;
+        }
+    }
+    if (item->charge == 0) { /* automatic discard of exhausted items */
+        player->inventory = drop(player->inventory, item);
+    }
+    return player->inventory;
+}
+
+item *drop(item *head, item *item) {
+
+    return head;
 }

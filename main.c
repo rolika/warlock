@@ -43,6 +43,7 @@ char *answer(char*); /* ask player a question, store the answer in the buffer */
 item *itemmenu(player*, int); /* handle items in the inventory */
 item *consume(player*, item*); /* consume an item */
 item *drop(item*, item*); /* drop an item from inventory */
+void repr_item(item*, int); /* detailled numbered representation of an item in one line */
 
 /* TODO:
     inventory menu
@@ -350,20 +351,7 @@ item *inventory_menu(player *player) {
 
             /* list all items currently in inventory */
             for (p = player->inventory; p != NULL; p = p->next, ++i) {
-                printf("[%d] %s: %ddb", i, p->name, p->quantity);
-                if (p->initial_charge > 0) {
-                    printf(" %d/%d", p->charge, p->initial_charge);
-                }
-                if (p->mod_dp != 0) {
-                    printf(" %+dÜ", p->mod_dp);
-                }
-                if (p->mod_hp != 0) {
-                    printf(" %+dÉ", p->mod_hp);
-                }
-                if (p->mod_lp != 0) {
-                    printf(" %+dSz", p->mod_lp);
-                }
-                putchar('\n');
+                repr_item(p, i);
             }        
 
             /* exit from inventory menu */
@@ -421,7 +409,7 @@ item *itemmenu(player *player, int choice) {
     while (1) {
         system("clear");
         status(player);
-        puts(p->name);
+        repr_item(p, -1);
         puts(LINE);
         switch (menu_of(2, "elfogyasztás", "eldobás")) {
             case 1:
@@ -473,4 +461,24 @@ item *consume(player *player, item *item) {
 item *drop(item *head, item *item) {
 
     return head;
+}
+
+void repr_item(item *item, int i) {
+    if (i >= 0) {
+        printf("[%d] ", i);
+    }
+    printf("%s: %ddb", item->name, item->quantity);
+    if (item->initial_charge > 0) {
+        printf(" %d/%d", item->charge, item->initial_charge);
+    }
+    if (item->mod_dp != 0) {
+        printf(" %+dÜ", item->mod_dp);
+    }
+    if (item->mod_hp != 0) {
+        printf(" %+dÉ", item->mod_hp);
+    }
+    if (item->mod_lp != 0) {
+        printf(" %+dSz", item->mod_lp);
+    }
+    putchar('\n');
 }

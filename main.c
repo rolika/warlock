@@ -12,7 +12,12 @@
 enum {
     MAX_ANSWER = 32,
     MAX_LINE = 1000,
-    MAX_CSV_FIELD = 100
+    MAX_CSV_FIELD = 100,
+    ITEM_ATTR = 7,
+    MAX_DP = 12,
+    MAX_HP = 24,
+    MAX_LP = 12,
+    ADD_VALUE = 6
 };
 
 #define roll_dice(n) (rand() % (n) + 1)
@@ -134,7 +139,7 @@ void load(player *player) {
         player->initial_lp = atoi(*++p);
         /* restore inventory */
         free_inventory(player->inventory);
-        n = getcsv(fp) / 7; /* an item has seven attributes */
+        n = getcsv(fp) / ITEM_ATTR; /* an item has seven attributes */
         p = csvfield;
         while (n--) {
             strcpy(name, *p++);
@@ -194,13 +199,13 @@ void create(player *player) {
     printf("Mi a neved, kalandor? ");
     scanf("%32s", player->name);
 
-    player->initial_dp = roll_dice(6) + 6;
+    player->initial_dp = roll_dice(6) + ADD_VALUE;
     player->dp = player->initial_dp;
 
-    player->initial_hp = roll_dice(6) + roll_dice(6) + 12;
+    player->initial_hp = roll_dice(6) + roll_dice(6) + ADD_VALUE*2;
     player->hp = player->initial_hp;
 
-    player->initial_lp =roll_dice(6) + 6;
+    player->initial_lp =roll_dice(6) + ADD_VALUE;
     player->lp = player->initial_lp;
 
     system("clear");
@@ -318,14 +323,14 @@ void free_inventory(item *head) {
 item *potion(item *head) {
     switch (menu_of(3, "ügyesség", "életerő", "szerencse")) {
         case 1:
-            head = take(head, new("ügyesség-varázsital", 1, 2, 2, 12, 0, 0));
+            head = take(head, new("ügyesség-varázsital", 1, 2, 2, MAX_DP, 0, 0));
             break;
         case 2:
-            head = take(head, new("életerő-varázsital", 1, 2, 2, 0, 24, 0));
+            head = take(head, new("életerő-varázsital", 1, 2, 2, 0, MAX_HP, 0));
             break;
         case 3: /* fall through */
         default:
-            head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, 12));
+            head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, MAX_LP));
     }
     return head;
 }

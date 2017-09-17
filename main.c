@@ -42,7 +42,8 @@ item *new2inventory(item*); /* create and add a new item to the inventory */
 char *answer(char*); /* ask player a question, store the answer in the buffer */
 item *itemmenu(player*, int); /* handle items in the inventory */
 item *consume(player*, item*); /* consume an item */
-item *drop(item*, item*); /* drop an item from inventory */
+item *drop(item*, item*); /* drop an item from inventory (decrease its quantity) */
+item *purge(item*); /* remove all 0-quantity items from inventory */
 void repr_item(item*, int); /* detailled numbered representation of an item in one line */
 
 /* TODO:
@@ -367,6 +368,7 @@ item *inventory_menu(player *player) {
                 save(player);
             } else { /* proceed to item menu */
                 player->inventory = itemmenu(player, choice);
+                save(player);
             }
         }
     }
@@ -400,25 +402,24 @@ char *answer(char *question) {
 }
 
 item *itemmenu(player *player, int choice) {
-    item *p = player->inventory;
+    item *item = player->inventory;
     /* identify item */
     while (--choice > 0) {
-        p = p->next;
+        item = item->next;
     }
     /* bring up item menu */
     while (1) {
         system("clear");
         status(player);
-        repr_item(p, -1);
+        repr_item(item, -1);
         puts(LINE);
         switch (menu_of(2, "elfogyasztás", "eldobás")) {
             case 1:
-                player->inventory = consume(player, p);
+                player->inventory = consume(player, item);
                 save(player);
                 break;
             case 2:
-                //player->inventory = drop(player->inventory, p);
-                break;
+                return drop(player->inventory, item);
             default:
                 return player->inventory;
 
@@ -427,8 +428,8 @@ item *itemmenu(player *player, int choice) {
 }
 
 item *consume(player *player, item *item) {
-    if (item->charge > -1) { /* only item with a valid charge value can be consumed */
-        --(item->charge);
+    if (item->charge > 0) { /* only item with a valid charge value can be consumed */
+        --item->charge;
         if (item->mod_dp) {
             player->dp += item->mod_dp;
             if (player->dp > player->initial_dp) {
@@ -451,15 +452,33 @@ item *consume(player *player, item *item) {
             ++(player->initial_lp);
             player->lp = player->initial_lp;
         }
-    }
-    if (item->charge == 0) { /* automatic discard of exhausted items */
-        player->inventory = drop(player->inventory, item);
+        if (item->charge <= 0) {
+            if (--item->quantity == 0) {
+                player->inventory = purge(player->inventory);
+            } else {
+                item->charge = item->initial_charge;
+            }
+        }
     }
     return player->inventory;
 }
 
 item *drop(item *head, item *item) {
+    --item->quantity;
+    return purge(head);
+}
 
+item *purge(item *head) {
+    item *tmp;
+    if (head != NULL) {
+        if (head->quantity <= 0) {
+            tmp = head->next;
+            free(head);
+            return purge(tmp);
+        } else {
+            head->next = purge(head->next);
+        }
+    }
     return head;
 }
 

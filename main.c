@@ -10,7 +10,6 @@
 #define TAGGED_LINE "--------------------------+-----------------+----------------+------------------"
 
 enum {
-    NAME_LENGTH = 32,
     MAX_ANSWER = 32,
     MAX_LINE = 1000,
     MAX_CSV_FIELD = 100
@@ -47,7 +46,7 @@ item *purge(item*); /* remove all 0-quantity items from inventory */
 void repr_item(item*, int); /* detailled numbered representation of an item in one line */
 
 struct item {
-    char name[NAME_LENGTH];
+    char name[MAX_ANSWER];
     int quantity;
     int initial_charge; // how many times the item can be used, -1 for unlimited usage
     int charge; // current charge, -1 for unlimited usage
@@ -58,14 +57,14 @@ struct item {
 };
 
 struct enemy {
-    char name[NAME_LENGTH];
+    char name[MAX_ANSWER];
     int dp;
     int hp;
     enemy *next;
 };
 
 struct player {
-    char name[NAME_LENGTH];
+    char name[MAX_ANSWER];
     int initial_dp;
     int initial_hp;
     int initial_lp;
@@ -119,7 +118,7 @@ int main() {
 
 void load(player *player) {
     FILE *fp;
-    char **p, name[NAME_LENGTH];
+    char **p, name[MAX_ANSWER];
     int n, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp;
     fp = fopen(SAVEFILE, "r");
     if (fp != NULL) {
@@ -370,7 +369,7 @@ item *inventory_menu(player *player) {
 }
 
 item *new2inventory(item *head) {
-    char name[NAME_LENGTH];
+    char name[MAX_ANSWER];
     int quantity, initial_charge, mod_dp, mod_hp, mod_lp;
 
     system("clear");

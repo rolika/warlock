@@ -46,11 +46,6 @@ item *drop(item*, item*); /* drop an item from inventory (decrease its quantity)
 item *purge(item*); /* remove all 0-quantity items from inventory */
 void repr_item(item*, int); /* detailled numbered representation of an item in one line */
 
-/* TODO:
-    inventory menu
-     - drop item (considering first decreasing quantity)
-*/
-
 struct item {
     char name[NAME_LENGTH];
     int quantity;

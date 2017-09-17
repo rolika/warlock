@@ -368,6 +368,7 @@ item *inventory_menu(player *player) {
                 save(player);
             } else { /* proceed to item menu */
                 player->inventory = itemmenu(player, choice);
+                player->inventory = purge(player->inventory);
                 save(player);
             }
         }
@@ -416,7 +417,6 @@ item *itemmenu(player *player, int choice) {
         switch (menu_of(2, "elfogyasztás", "eldobás")) {
             case 1:
                 player->inventory = consume(player, item);
-                save(player);
                 break;
             case 2:
                 return drop(player->inventory, item);
@@ -428,7 +428,7 @@ item *itemmenu(player *player, int choice) {
 }
 
 item *consume(player *player, item *item) {
-    if (item->charge > 0) { /* only item with a valid charge value can be consumed */
+    if (item->charge > 0 && item->quantity > 0) { /* only item with a valid charge value can be consumed */
         --item->charge;
         if (item->mod_dp) {
             player->dp += item->mod_dp;
@@ -453,11 +453,8 @@ item *consume(player *player, item *item) {
             player->lp = player->initial_lp;
         }
         if (item->charge <= 0) {
-            if (--item->quantity == 0) {
-                player->inventory = purge(player->inventory);
-            } else {
-                item->charge = item->initial_charge;
-            }
+            --item->quantity;
+            item->charge = item->initial_charge;
         }
     }
     return player->inventory;

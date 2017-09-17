@@ -451,8 +451,9 @@ void consume(player *player, item *item) {
             player->lp = player->initial_lp;
         }
         if (item->charge <= 0) {
-            --item->quantity;
-            item->charge = item->initial_charge;
+            if (--item->quantity > 0) {
+                item->charge = item->initial_charge;
+            }
         }
     }
 }

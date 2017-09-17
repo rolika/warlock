@@ -339,7 +339,6 @@ item *potion(item *head) {
 item *inventory_menu(player *player) {
     item *p;
     int i, choice;
-    if (player->inventory != NULL) {
         while (1) {
             i = 0, choice = -1;
             system("clear");
@@ -372,7 +371,6 @@ item *inventory_menu(player *player) {
                 save(player);
             }
         }
-    }
     return player->inventory;
 }
 

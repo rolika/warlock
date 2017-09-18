@@ -48,7 +48,9 @@ item *itemmenu(player*, int); /* handle items in the inventory */
 void consume(player*, item*); /* consume an item */
 item *drop(item*, item*); /* drop an item from inventory (decrease its quantity) */
 item *purge(item*); /* remove all 0-quantity items from inventory */
-void repr_item(item*, int); /* detailled numbered representation of an item in one line */
+void repr_item(item*, int); /* short, numbered representation of an item in one line */
+void luckmenu(player*); /* handle any dice roll related tasks */
+void lucktrial(player*); /* try your luck according to game rules */
 
 struct item {
     char name[MAX_ANSWER];
@@ -110,7 +112,7 @@ int main() {
                 puts("ellenségek");
                 break;
             case 5:
-                puts("dobókocka");
+                luckmenu(&player);
                 break;
             case 6:
                 puts("Good bye!");
@@ -494,4 +496,35 @@ void repr_item(item *item, int i) {
         printf(" %+dSz", item->mod_lp);
     }
     putchar('\n');
+}
+
+void luckmenu(player *player) {
+    while (1) {
+        system("clear");
+        status(player);
+        switch (menu_of(2, "szerencse-próba", "kockadobás")) {
+            case 1:
+                lucktrial(player);
+                save(player);
+                break;
+            case 2:
+                // dice_roll();
+                break;
+            default:
+                return;
+        }
+    }
+}
+
+void lucktrial(player *player) {
+    if (player->lp < 1) {
+        puts("Nem tehetsz szerencsepróbát!");
+    } else {
+        int trial = roll_dice(6) + roll_dice(6);
+        printf("A dobás (%d) %s, mint a szerencse (%d).\n", trial, trial > player->lp ? "nagyobb" : "kisebb vagy egyenlő", player->lp);
+        printf("A szerencse-próbát %s!\n", trial > player->lp ? "ELBUKTAD" : "MEGNYERTED");
+        --player->lp;
+    }
+    puts("Nyomj Enter-t!");
+    while ((getchar() != '\n'));
 }

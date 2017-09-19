@@ -51,6 +51,7 @@ item *purge(item*); /* remove all 0-quantity items from inventory */
 void repr_item(item*, int); /* short, numbered representation of an item in one line */
 void luckmenu(player*); /* handle any dice roll related tasks */
 void lucktrial(player*); /* try your luck according to game rules */
+void dice_roll(void); /* roll two dices, display them and their sum */
 
 struct item {
     char name[MAX_ANSWER];
@@ -508,7 +509,7 @@ void luckmenu(player *player) {
                 save(player);
                 break;
             case 2:
-                // dice_roll();
+                dice_roll();
                 break;
             default:
                 return;
@@ -525,6 +526,15 @@ void lucktrial(player *player) {
         printf("A szerencse-próbát %s!\n", trial > player->lp ? "ELBUKTAD" : "MEGNYERTED");
         --player->lp;
     }
+    puts("Nyomj Enter-t!");
+    while ((getchar() != '\n'));
+}
+
+void dice_roll(void) {
+    int first = roll_dice(6), second = roll_dice(6);
+    printf("Első kockadobás: %d\n", first);
+    printf("Második kockadobás: %d\n", second);
+    printf("Összegük: %d\n", first + second);
     puts("Nyomj Enter-t!");
     while ((getchar() != '\n'));
 }

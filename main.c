@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define SAVEFILE "player.dat"
 #define TITLE "A  T Ű Z H E G Y   V A R Á Z S L Ó J A"
@@ -52,6 +53,7 @@ void repr_item(item*, int); /* short, numbered representation of an item in one 
 void luckmenu(player*); /* handle any dice roll related tasks */
 void lucktrial(player*); /* try your luck according to game rules */
 void dice_roll(void); /* roll two dices, display them and their sum */
+bool fight(player*); /* fighting procedure, returns true if player wins */
 
 struct item {
     char name[MAX_ANSWER];
@@ -104,8 +106,11 @@ int main() {
                 save(&player);
                 break;
             case 2:
-                puts("harc");
-                break;
+                if (fight(&player)) {
+                    break;
+                } else {
+                    exit(0);
+                }
             case 3:
                 player.inventory = inventory_menu(&player);
                 break;
@@ -537,4 +542,48 @@ void dice_roll(void) {
     printf("Összegük: %d\n", first + second);
     puts("Nyomj Enter-t!");
     while ((getchar() != '\n'));
+}
+
+bool fight(player *player) {
+    bool survived = true, detailled = true, manually = false, separately = true;
+    int enemies, i;
+    char name[MAX_ANSWER], dp, hp;
+    system("clear");
+    status(player);
+    puts("Hogyan szeretnéd a csatát?");
+    switch (menu_of(3, "csak végeredmény", "részletek is", "kézi")) {
+        case 1:
+            detailled = false;
+            break;
+        case 3:
+            manually = true;
+            break;
+        case 4:
+            return survived;
+    }
+    if ((enemies = toint(answer("ellenfeleid száma"))) < 1) {
+        enemies = 1;
+    }
+    if (enemies > 1) {
+        puts("Hogyan támadnak az ellenfeleid?");
+        if (menu_of(2, "egyszerre", "egymás után") == 1) {
+            separately = false;
+        }
+    }
+    for (i = 1; i <= enemies; ++i) {
+        if (enemies > 1) {
+            printf("%d.\n", i);
+        }
+        strcpy(name, answer("ellenfeled neve"));
+        dp = toint(answer("    - ügyessége"));
+        hp = toint(answer("    - életereje"));
+        // create a new enemy and add to a linked list
+    }
+    while ((getchar() != '\n'));
+    while (1) {
+        system("clear");
+        status(player);
+        break;
+    }
+    return survived;
 }

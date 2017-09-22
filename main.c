@@ -18,7 +18,8 @@ enum {
     MAX_DP = 12,
     MAX_HP = 24,
     MAX_LP = 12,
-    ADD_VALUE = 6
+    ADD_VALUE = 6,
+    ENEMY_ATTR = 5
 };
 
 #define roll_dice(n) (rand() % (n) + 1)
@@ -54,6 +55,11 @@ void luckmenu(player*); /* handle any dice roll related tasks */
 void lucktrial(player*); /* try your luck according to game rules */
 void dice_roll(void); /* roll two dices, display them and their sum */
 bool fight(player*); /* fighting procedure, returns true if player wins */
+enemy *encounter(char*, int, int); /* create a new enemy struct */
+enemy *enlist(enemy*, enemy*); /* add a new enemy to list */
+enemy *defeated(enemy*, enemy*); /* remove enemy from list */
+void repr_enemy(enemy*); /* short representation of an enemy */
+void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
 
 struct item {
     char name[MAX_ANSWER];
@@ -68,6 +74,8 @@ struct item {
 
 struct enemy {
     char name[MAX_ANSWER];
+    int initial_dp;
+    int initial_hp;
     int dp;
     int hp;
     enemy *next;
@@ -82,7 +90,8 @@ struct player {
     int hp;
     int lp;
     item *inventory; // implemented as a linked list
-    enemy *enemies; // deto
+    enemy *roster; // linked list holding current enemies
+    enemy *beaten; // linked list holding all defeated enemies
 };
 
 char csvbuffer[MAX_LINE];
@@ -157,7 +166,8 @@ void load(player *player) {
             mod_dp = atoi(*p++);
             mod_hp = atoi(*p++);
             mod_lp= atoi(*p++);
-            player->inventory = take(player->inventory, new(name, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp));
+            player->inventory = take(player->inventory,
+                new(name, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp));
         }
         fclose(fp);
     }
@@ -251,6 +261,7 @@ item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, 
         newitem->mod_dp = mod_dp;
         newitem->mod_hp = mod_hp;
         newitem->mod_lp = mod_lp;
+        newitem->next = NULL;
         return newitem;
     } else {
         puts("Some really nasty error occured.");
@@ -278,17 +289,6 @@ item *setup(item* head) {
     puts("Válassz egyet a varázsitalok közül!");
     head = potion(head); /* choose a potion and add to inventory */
     return head;
-}
-
-void apply(item* head, void (*fn) (item*, char*), char* arg) {
-    item *p; // preserve head
-    for (p = head; p != NULL; p = p->next) {
-        (*fn)(p, arg);
-    }
-}
-
-void print(item *head, char *fmt) {
-    printf(fmt, head->name, head->quantity);
 }
 
 item *lookup(item *head, char *name) {
@@ -577,7 +577,14 @@ bool fight(player *player) {
         strcpy(name, answer("ellenfeled neve"));
         dp = toint(answer("    - ügyessége"));
         hp = toint(answer("    - életereje"));
-        // create a new enemy and add to a linked list
+        if (i == 1) {
+            player->roster = encounter(name, dp, hp);
+        } else {
+            player->roster = enlist(player->roster, encounter(name, dp, hp));
+        }
+    }
+    for (; player->roster != NULL; player->roster = player->roster->next) {
+        repr_enemy(player->roster);
     }
     while ((getchar() != '\n'));
     while (1) {
@@ -587,3 +594,54 @@ bool fight(player *player) {
     }
     return survived;
 }
+
+enemy *encounter(char *name, int dp, int hp) {
+    enemy *enemy;
+    enemy = malloc(sizeof(enemy));
+    if (enemy != NULL) {
+        strcpy(enemy->name, name);
+        enemy->initial_dp = dp;
+        enemy->initial_hp = hp;
+        enemy->dp = dp;
+        enemy->hp = hp;
+        enemy->next = NULL;
+        return enemy;
+    } else {
+        puts("Some really nasty error occured.");
+        puts("Unable allocate enough memory.");
+        exit(1);
+    }
+}
+
+enemy *enlist(enemy *head, enemy *enemy) {
+    enemy->next = head;
+    return enemy;
+}
+
+void repr_enemy(enemy *enemy) {
+    printf("%s: Ü%d/%d É%d/%d\n",
+        enemy->name, enemy->dp, enemy->initial_dp, enemy->hp, enemy->initial_hp);
+}
+
+/*enemy *defeated(enemy *head, enemy *beaten) {
+    enemy *tmp;
+    if (head != NULL) {
+        if (head == beaten) {
+            tmp = head->next;
+            free(head);
+            return defeated(tmp, beaten);
+        } else {
+            head->next = defeated(head->next, beaten);
+        }
+    }
+    return head;
+}*/
+
+/*void enemies2csv(enemy* head, FILE *fp) {
+    enemy *p; // preserve head
+    for (p = head; p != NULL; p = p->next) {
+        fprintf(fp, "%s;%d;%d;%d;%d;", p->name, p->initial_dp, p->initial_hp, p->dp, p->hp);
+    }
+    fseek(fp, -1, SEEK_CUR); // remove ending semicolon
+    fputc('\n', fp);
+}*/

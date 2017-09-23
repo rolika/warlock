@@ -271,13 +271,18 @@ item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, 
 }
 
 item *take(item *head, item *newitem) {
-    item *exist = lookup(head, newitem->name);
-    if (exist == NULL) {
-        newitem->next = head; // add item to the front of list (as new first item)
-        return newitem;
+    item *p;
+    if (head == NULL) {
+        return newitem; // first item in the inventory
     } else {
-        exist->quantity += newitem->quantity; // increase quantity
-        return head; // head is untouched
+        item *exist = lookup(head, newitem->name);
+        if (exist == NULL) { // new item
+            for (p = head; p->next !=NULL; p = p->next);
+            p->next = newitem; // add item to end of list
+        } else { // duplicate entry
+            exist->quantity += newitem->quantity; // increase quantity
+        }
+        return head;
     }
 }
 

@@ -577,19 +577,16 @@ bool fight(player *player) {
     }
     for (i = 1; i <= enemies; ++i) {
         if (enemies > 1) {
-            printf("%d.\n", i);
+            printf("%d. ", i);
         }
         strcpy(name, answer("ellenfeled neve"));
-        dp = toint(answer("    - ügyessége"));
-        hp = toint(answer("    - életereje"));
-        if (i == 1) {
-            player->roster = encounter(name, dp, hp);
-        } else {
-            player->roster = enlist(player->roster, encounter(name, dp, hp));
-        }
+        dp = toint(answer("       - ügyessége"));
+        hp = toint(answer("       - életereje"));
+        player->roster = enlist(player->roster, encounter(name, dp, hp));
     }
-    for (; player->roster != NULL; player->roster = player->roster->next) {
-        repr_enemy(player->roster);
+    enemy *p;
+    for (p = player->roster; p != NULL; p = p->next) {
+        repr_enemy(p);
     }
     while ((getchar() != '\n'));
     while (1) {
@@ -601,16 +598,16 @@ bool fight(player *player) {
 }
 
 enemy *encounter(char *name, int dp, int hp) {
-    enemy *enemy;
-    enemy = malloc(sizeof(enemy));
-    if (enemy != NULL) {
-        strcpy(enemy->name, name);
-        enemy->initial_dp = dp;
-        enemy->initial_hp = hp;
-        enemy->dp = dp;
-        enemy->hp = hp;
-        enemy->next = NULL;
-        return enemy;
+    enemy *newenemy;
+    newenemy = malloc(sizeof(enemy));
+    if (newenemy != NULL) {
+        strcpy(newenemy->name, name);
+        newenemy->initial_dp = dp;
+        newenemy->initial_hp = hp;
+        newenemy->dp = dp;
+        newenemy->hp = hp;
+        newenemy->next = NULL;
+        return newenemy;
     } else {
         puts("Some really nasty error occured.");
         puts("Unable allocate enough memory.");
@@ -618,9 +615,15 @@ enemy *encounter(char *name, int dp, int hp) {
     }
 }
 
-enemy *enlist(enemy *head, enemy *enemy) {
-    enemy->next = head;
-    return enemy;
+enemy *enlist(enemy *head, enemy *newenemy) {
+    enemy *p;
+    if (head == NULL) {
+        return newenemy;
+    } else {
+        for (p = head; p->next != NULL; p = p->next);
+        p->next = newenemy;
+        return head;
+    }
 }
 
 void repr_enemy(enemy *enemy) {

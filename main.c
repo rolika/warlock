@@ -19,7 +19,8 @@ enum {
     MAX_HP = 24,
     MAX_LP = 12,
     ADD_VALUE = 6,
-    ENEMY_ATTR = 5
+    ENEMY_ATTR = 5,
+    BASE_HIT = 2
 };
 
 #define roll_dice(n) (rand() % (n) + 1)
@@ -57,8 +58,8 @@ void dice_roll(void); /* roll two dices, display them and their sum */
 bool fight(player*); /* fighting procedure, returns true if player wins */
 enemy *encounter(char*, int, int); /* create a new enemy struct */
 enemy *enlist(enemy*, enemy*); /* add a new enemy to list */
-enemy *defeated(enemy*, enemy*); /* remove enemy from list */
 void repr_enemy(enemy*); /* short representation of an enemy */
+enemy *dereference(enemy*, enemy*); /* remove reference of an enemy from list (without freeing) */
 void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
 
 struct item {
@@ -78,6 +79,7 @@ struct enemy {
     int initial_hp;
     int dp;
     int hp;
+    int attack;
     enemy *next;
 };
 
@@ -89,6 +91,7 @@ struct player {
     int dp;
     int hp;
     int lp;
+    int attack;
     item *inventory; // implemented as a linked list
     enemy *roster; // linked list holding current enemies
     enemy *beaten; // linked list holding all defeated enemies
@@ -101,6 +104,9 @@ char *csvfield[MAX_CSV_FIELD];
 int main() {
     srand(time(NULL));
     player player = {};
+    player.inventory = NULL;
+    player.roster = NULL;
+    player.beaten = NULL;
     load(&player);
 
     /* main menu */
@@ -550,11 +556,32 @@ void dice_roll(void) {
 }
 
 bool fight(player *player) {
-    bool survived = true, detailled = true, manually = false, separately = true;
-    int enemies, i;
-    char name[MAX_ANSWER], dp, hp;
+    enemy *current_enemy;
+    player->roster = enlist(player->roster, encounter("Troll", 6, 12));
+    current_enemy = player->roster;
     system("clear");
     status(player);
+    while (player->hp > 1 && current_enemy->hp > 1) {
+        repr_enemy(current_enemy);
+        player->attack = roll_dice(6) + roll_dice(6) + player->dp;
+        current_enemy->attack = roll_dice(6) + roll_dice(6) + current_enemy->dp;
+        if (player->attack == current_enemy->attack) {
+            puts("Döntetlen kör!");
+        } else if (player->attack > current_enemy->attack) {
+            current_enemy->hp -= 2;
+            puts("Te nyerted a kört!");
+        } else {
+            player->hp -=2;
+            puts("Ellenfeled nyerte a kört!");
+        }
+    }
+    /*bool detailled = true, manually = false, separately = true;
+    int enemies, i, hit, hitmod;
+    char name[MAX_ANSWER], dp, hp;
+    enemy *current_enemy;
+    system("clear");
+    status(player);
+    test_enemy();
     puts("Hogyan szeretnéd a csatát?");
     switch (menu_of(3, "csak végeredmény", "részletek is", "kézi")) {
         case 1:
@@ -580,21 +607,44 @@ bool fight(player *player) {
             printf("%d. ", i);
         }
         strcpy(name, answer("ellenfeled neve"));
-        dp = toint(answer("       - ügyessége"));
-        hp = toint(answer("       - életereje"));
+        dp = toint(answer("    - ügyessége"));
+        hp = toint(answer("    - életereje"));
         player->roster = enlist(player->roster, encounter(name, dp, hp));
     }
-    enemy *p;
-    for (p = player->roster; p != NULL; p = p->next) {
-        repr_enemy(p);
-    }
-    while ((getchar() != '\n'));
-    while (1) {
+    current_enemy = player->roster;
+    while (player->roster != NULL) {
         system("clear");
         status(player);
-        break;
-    }
-    return survived;
+        player->attack = roll_dice(6) + roll_dice(6) + player->dp;
+        current_enemy->attack = roll_dice(6) + roll_dice(6) + current_enemy->dp
+        hit = BASE_HIT;
+        if (manual) {
+            // ask here for possible escape
+        }
+        if (player->attack == current_enemy->attack) {
+            // report tie if detailled or manual
+            // move to next enemy if they're attacking together
+            continue;
+        }
+        if (player->attack > current_enemy->attack) {
+            // place to manual options
+            if ((current_enemy->dp -= hit) < 1) {
+                current_enemy = current_enemy->next;
+                dereference(player->roster, current_enemy);
+                enlist(player->beaten, current_enemy);
+            }
+        } else if (player->attack < current_enemy->attack) {
+            // place to manual options
+            if ((player->dp -= hit) < 1) {
+                return false;
+            }
+        }
+        if (separately) {
+            continue;
+        }
+        current_enemy = current_enemy->next == NULL ? player->roster : current_enemy->next;
+    }*/
+    return true;
 }
 
 enemy *encounter(char *name, int dp, int hp) {
@@ -627,23 +677,30 @@ enemy *enlist(enemy *head, enemy *newenemy) {
 }
 
 void repr_enemy(enemy *enemy) {
-    printf("%s: Ü%d/%d É%d/%d\n",
-        enemy->name, enemy->dp, enemy->initial_dp, enemy->hp, enemy->initial_hp);
+    if (enemy == NULL) {
+        puts("Nothing in the list!");
+    } else {
+        printf("%s: Ü%d/%d É%d/%d\n",
+            enemy->name, enemy->dp, enemy->initial_dp, enemy->hp, enemy->initial_hp);
+    }
 }
 
-/*enemy *defeated(enemy *head, enemy *beaten) {
-    enemy *tmp;
-    if (head != NULL) {
-        if (head == beaten) {
-            tmp = head->next;
-            free(head);
-            return defeated(tmp, beaten);
-        } else {
-            head->next = defeated(head->next, beaten);
+enemy *dereference(enemy *head, enemy *defeated) {
+    /* it is assumed that enemies have unique names as in the book */
+    enemy *p, *prev = NULL;
+    for (p = head; p != NULL; p = p->next) {
+        if (strcmp(p->name, defeated->name) == 0) {
+            if (prev == NULL) { // first enemy in the list
+                head = p->next;
+            } else {
+                prev->next = p->next;
+            }
+            return head;
         }
+        prev = p;
     }
     return head;
-}*/
+}
 
 /*void enemies2csv(enemy* head, FILE *fp) {
     enemy *p; // preserve head

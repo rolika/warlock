@@ -126,6 +126,7 @@ int main() {
                 } else {
                     exit(0);
                 }
+                break;
             case 3:
                 player.inventory = inventory_menu(&player);
                 break;
@@ -556,25 +557,42 @@ void dice_roll(void) {
 }
 
 bool fight(player *player) {
-    enemy *current_enemy;
+    enemy *current_enemy, *next_enemy;
     player->roster = enlist(player->roster, encounter("Troll", 6, 12));
-    current_enemy = player->roster;
-    system("clear");
-    status(player);
-    while (player->hp > 1 && current_enemy->hp > 1) {
-        repr_enemy(current_enemy);
-        player->attack = roll_dice(6) + roll_dice(6) + player->dp;
-        current_enemy->attack = roll_dice(6) + roll_dice(6) + current_enemy->dp;
-        if (player->attack == current_enemy->attack) {
-            puts("Döntetlen kör!");
-        } else if (player->attack > current_enemy->attack) {
-            current_enemy->hp -= 2;
-            puts("Te nyerted a kört!");
-        } else {
-            player->hp -=2;
-            puts("Ellenfeled nyerte a kört!");
+    player->roster = enlist(player->roster, encounter("Ork", 6, 11));
+
+    next_enemy = player->roster;
+    while (next_enemy !=NULL) {
+        //system("clear");
+        status(player);
+        
+        current_enemy = next_enemy;
+        while (current_enemy->hp > 0) {
+            repr_enemy(current_enemy);
+            player->attack = roll_dice(6) + roll_dice(6) + player->dp;
+            current_enemy->attack = roll_dice(6) + roll_dice(6) + current_enemy->dp;
+            if (player->attack == current_enemy->attack) {
+                puts("Döntetlen kör!");
+            } else if (player->attack > current_enemy->attack) {
+                current_enemy->hp -= 2;
+                puts("Te nyerted a kört!");
+            } else {
+                player->hp -=2;
+                puts("Ellenfeled nyerte a kört!");
+                if (player->hp < 1) {
+                    puts("Ellenfeled megölt!");
+                    return false;
+                }
+            }
         }
+
+        puts("Megölted az ellenfeledet!");
+        next_enemy = current_enemy->next;
+        player->roster = dereference(player->roster, current_enemy);
+        player->beaten = enlist(player->beaten, current_enemy);
+        //while ((getchar() != '\n'));
     }
+
     /*bool detailled = true, manually = false, separately = true;
     int enemies, i, hit, hitmod;
     char name[MAX_ANSWER], dp, hp;
@@ -689,12 +707,14 @@ enemy *dereference(enemy *head, enemy *defeated) {
     /* it is assumed that enemies have unique names as in the book */
     enemy *p, *prev = NULL;
     for (p = head; p != NULL; p = p->next) {
+        printf("%s is about to be dereferenced from the roster.\n", p->name);
         if (strcmp(p->name, defeated->name) == 0) {
             if (prev == NULL) { // first enemy in the list
                 head = p->next;
             } else {
                 prev->next = p->next;
             }
+            p->next = NULL;
             return head;
         }
         prev = p;

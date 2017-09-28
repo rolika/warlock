@@ -588,9 +588,9 @@ bool fight(player *player) {
 
         puts("Megölted az ellenfeledet!");
         next_enemy = current_enemy->next;
-        player->roster = dereference(player->roster, current_enemy);
         player->beaten = enlist(player->beaten, current_enemy);
-        //while ((getchar() != '\n'));
+        player->roster = dereference(player->roster, current_enemy);
+        while ((getchar() != '\n'));
     }
 
     /*bool detailled = true, manually = false, separately = true;
@@ -707,7 +707,6 @@ enemy *dereference(enemy *head, enemy *defeated) {
     /* it is assumed that enemies have unique names as in the book */
     enemy *p, *prev = NULL;
     for (p = head; p != NULL; p = p->next) {
-        printf("%s is about to be dereferenced from the roster.\n", p->name);
         if (strcmp(p->name, defeated->name) == 0) {
             if (prev == NULL) { // first enemy in the list
                 head = p->next;

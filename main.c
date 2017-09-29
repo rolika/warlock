@@ -689,11 +689,16 @@ enemy *enlist(enemy *head, enemy *newenemy) {
     }
 }
 
+void repr_player(player *player) {
+    printf("%s: Ü%d/%d É%d/%d Sz%d/%d", player->name, player->dp, player->initial_dp, player->hp,
+        player->initial_hp, player->lp, player->initial_lp);
+}
+
 void repr_enemy(enemy *enemy) {
     if (enemy == NULL) {
         puts("Nothing in the list!");
     } else {
-        printf("%s: Ü%d/%d É%d/%d\n",
+        printf("%s: Ü%d/%d É%d/%d",
             enemy->name, enemy->dp, enemy->initial_dp, enemy->hp, enemy->initial_hp);
     }
 }

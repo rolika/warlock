@@ -58,6 +58,7 @@ void dice_roll(void); /* roll two dices, display them and their sum */
 bool fight(player*); /* fighting procedure, returns true if player wins */
 enemy *encounter(char*, int, int); /* create a new enemy struct */
 enemy *enlist(enemy*, enemy*); /* add a new enemy to list */
+void repr_player(player*); /* short representation of the player */
 void repr_enemy(enemy*); /* short representation of an enemy */
 enemy *dereference(enemy*, enemy*); /* remove reference of an enemy from list (without freeing) */
 void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
@@ -604,17 +605,23 @@ bool fight(player *player) {
     /* battle loop */
     next_enemy = player->roster;
     while (next_enemy != NULL) {
-        //system("clear");
-        status(player);
 
         /* one round in the battle */
         current_enemy = next_enemy;
         if (detailled) {
+            puts(LINE);            
+            repr_player(player);
+            printf(" vs ");
             repr_enemy(current_enemy);
+            puts("");
         }
         player_attack = roll_dice(6) + roll_dice(6) + player->dp;
         enemy_attack = roll_dice(6) + roll_dice(6) + current_enemy->dp;
         hit = BASE_HIT;
+        if (detailled) {
+            printf("%s támadóereje: %d, %s támadóereje: %d\n",
+                player->name, player_attack, current_enemy->name, enemy_attack);
+        }
         if (manually) {
             // ask here for escape intent
         }
@@ -647,16 +654,18 @@ bool fight(player *player) {
             }
             player->hp -= hit;
             if (player->hp < 1) {
-                puts("Ellenfeled megölt!");
+                if (detailled) {
+                    puts("Ellenfeled megölt!");
+                }
                 return false;
             }
         }
-        if (separately) {
-            continue;
-        } else {
+        if (!separately) {
             next_enemy = current_enemy->next == NULL ? player->roster : current_enemy->next;
         }
     }
+    puts("Megnyerted a csatát!");
+    while ((getchar() != '\n'));
     return true;
 }
 
@@ -690,7 +699,7 @@ enemy *enlist(enemy *head, enemy *newenemy) {
 }
 
 void repr_player(player *player) {
-    printf("%s: Ü%d/%d É%d/%d Sz%d/%d", player->name, player->dp, player->initial_dp, player->hp,
+    printf("%s Ü%d/%d É%d/%d Sz%d/%d", player->name, player->dp, player->initial_dp, player->hp,
         player->initial_hp, player->lp, player->initial_lp);
 }
 
@@ -698,7 +707,7 @@ void repr_enemy(enemy *enemy) {
     if (enemy == NULL) {
         puts("Nothing in the list!");
     } else {
-        printf("%s: Ü%d/%d É%d/%d",
+        printf("%s Ü%d/%d É%d/%d",
             enemy->name, enemy->dp, enemy->initial_dp, enemy->hp, enemy->initial_hp);
     }
 }

@@ -53,7 +53,7 @@ item *drop(item*, item*); /* drop an item from inventory (decrease its quantity)
 item *purge(item*); /* remove all 0-quantity items from inventory */
 void repr_item(item*, int); /* short, numbered representation of an item in one line */
 void luckmenu(player*); /* handle any dice roll related tasks */
-void lucktrial(player*); /* try your luck according to game rules */
+int lucktrial(player*); /* try your luck according to game rules */
 void dice_roll(void); /* roll two dices, display them and their sum */
 bool fight(player*); /* fighting procedure, returns true if player wins */
 enemy *encounter(char*, int, int); /* create a new enemy struct */
@@ -534,17 +534,21 @@ void luckmenu(player *player) {
     }
 }
 
-void lucktrial(player *player) {
+int lucktrial(player *player) {
+    bool result;
     if (player->lp < 1) {
         puts("Nem tehetsz szerencsepróbát!");
+        return 0;
     } else {
         int trial = roll_dice(6) + roll_dice(6);
-        printf("A dobás (%d) %s, mint a szerencse (%d).\n", trial, trial > player->lp ? "nagyobb" : "kisebb vagy egyenlő", player->lp);
-        printf("A szerencse-próbát %s!\n", trial > player->lp ? "ELBUKTAD" : "MEGNYERTED");
+        result = trial > player->lp;
+        printf("A dobás (%d) %s, mint a szerencse (%d).\n", trial, result ? "nagyobb" : "kisebb vagy egyenlő", player->lp);
+        printf("A szerencse-próbát %s!\n", result ? "ELBUKTAD" : "MEGNYERTED");
         --player->lp;
     }
     puts("Nyomj Enter-t!");
     while ((getchar() != '\n'));
+    return result ? 1 : 2;
 }
 
 void dice_roll(void) {

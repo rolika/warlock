@@ -629,6 +629,19 @@ bool fight(player *player) {
         }
         if (manually) {
             if (menu_of(1, "szökés") == 1) {
+                puts("Próbára teszed a szerencséd?");
+                if (menu_of(1, "szerencse-próba") == 1) {
+                    switch (lucktrial(player)) {
+                        case 1:
+                            hit += 1;
+                            break;
+                        case 2:
+                            hit -= 1;
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 if (enemy_kills(player, hit)) {
                     puts("Menekülés közben az ellenfeled halálos csapást mért rád!");
                     return false;
@@ -647,7 +660,18 @@ bool fight(player *player) {
                 puts("Te nyerted a kört!");
             }
             if (manually) {
-                // ask here for lucky trial if in manual mode and modify attack hit
+                if (menu_of(1, "szerencse-próba") == 1) {
+                    switch (lucktrial(player)) {
+                        case 1:
+                            hit -= 1;
+                            break;
+                        case 2:
+                            hit += 2;
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
             current_enemy->hp -= hit;
             if (current_enemy->hp < 1) {
@@ -663,7 +687,18 @@ bool fight(player *player) {
                 puts("Ellenfeled nyerte a kört!");
             }
             if (manually) {
-                // ask here for lucky trial if in manual mode and modify attack hit
+                if (menu_of(1, "szerencse-próba") == 1) {
+                    switch (lucktrial(player)) {
+                        case 1:
+                            hit += 1;
+                            break;
+                        case 2:
+                            hit -= 1;
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
             if (enemy_kills(player, hit)) {
                 if (detailled) {

@@ -124,6 +124,7 @@ int main() {
                 if (fight(&player)) {
                     break;
                 } else {
+                    puts("A kalandod sajnos véget ért!");
                     exit(0);
                 }
                 break;
@@ -137,7 +138,6 @@ int main() {
                 luckmenu(&player);
                 break;
             case 6:
-                puts("Good bye!");
                 exit(0);
         }
     }

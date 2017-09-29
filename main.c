@@ -79,7 +79,6 @@ struct enemy {
     int initial_hp;
     int dp;
     int hp;
-    int attack;
     enemy *next;
 };
 
@@ -91,7 +90,6 @@ struct player {
     int dp;
     int hp;
     int lp;
-    int attack;
     item *inventory; // implemented as a linked list
     enemy *roster; // linked list holding current enemies
     enemy *beaten; // linked list holding all defeated enemies
@@ -557,49 +555,16 @@ void dice_roll(void) {
 }
 
 bool fight(player *player) {
-    enemy *current_enemy, *next_enemy;
-    player->roster = enlist(player->roster, encounter("Troll", 6, 12));
-    player->roster = enlist(player->roster, encounter("Ork", 6, 11));
-
-    next_enemy = player->roster;
-    while (next_enemy !=NULL) {
-        //system("clear");
-        status(player);
-        
-        current_enemy = next_enemy;
-        while (current_enemy->hp > 0) {
-            repr_enemy(current_enemy);
-            player->attack = roll_dice(6) + roll_dice(6) + player->dp;
-            current_enemy->attack = roll_dice(6) + roll_dice(6) + current_enemy->dp;
-            if (player->attack == current_enemy->attack) {
-                puts("Döntetlen kör!");
-            } else if (player->attack > current_enemy->attack) {
-                current_enemy->hp -= 2;
-                puts("Te nyerted a kört!");
-            } else {
-                player->hp -=2;
-                puts("Ellenfeled nyerte a kört!");
-                if (player->hp < 1) {
-                    puts("Ellenfeled megölt!");
-                    return false;
-                }
-            }
-        }
-
-        puts("Megölted az ellenfeledet!");
-        next_enemy = current_enemy->next;
-        player->beaten = enlist(player->beaten, current_enemy);
-        player->roster = dereference(player->roster, current_enemy);
-        while ((getchar() != '\n'));
-    }
-
-    /*bool detailled = true, manually = false, separately = true;
-    int enemies, i, hit, hitmod;
+    bool detailled = true, manually = false, separately = true;
+    int enemies, i, hit, player_attack, enemy_attack;
     char name[MAX_ANSWER], dp, hp;
-    enemy *current_enemy;
+    enemy *current_enemy, *next_enemy;
+
     system("clear");
     status(player);
-    test_enemy();
+
+    /* choose battle mod: just ending result or show rounds or detailled
+        the first two don't allow the lucky trial or to escape from battle */
     puts("Hogyan szeretnéd a csatát?");
     switch (menu_of(3, "csak végeredmény", "részletek is", "kézi")) {
         case 1:
@@ -609,17 +574,23 @@ bool fight(player *player) {
             manually = true;
             break;
         case 4:
-            return survived;
+            return true;
     }
+
+    /* enter number of attacking enemies */
     if ((enemies = toint(answer("ellenfeleid száma"))) < 1) {
         enemies = 1;
     }
+
+    /* multiple enemies can attack at the same time or one after the other */
     if (enemies > 1) {
         puts("Hogyan támadnak az ellenfeleid?");
         if (menu_of(2, "egyszerre", "egymás után") == 1) {
             separately = false;
         }
     }
+
+    /* enter enemy data: name, dexterity and hit points */
     for (i = 1; i <= enemies; ++i) {
         if (enemies > 1) {
             printf("%d. ", i);
@@ -629,39 +600,63 @@ bool fight(player *player) {
         hp = toint(answer("    - életereje"));
         player->roster = enlist(player->roster, encounter(name, dp, hp));
     }
-    current_enemy = player->roster;
-    while (player->roster != NULL) {
-        system("clear");
+    
+    /* battle loop */
+    next_enemy = player->roster;
+    while (next_enemy != NULL) {
+        //system("clear");
         status(player);
-        player->attack = roll_dice(6) + roll_dice(6) + player->dp;
-        current_enemy->attack = roll_dice(6) + roll_dice(6) + current_enemy->dp
+
+        /* one round in the battle */
+        current_enemy = next_enemy;
+        if (detailled) {
+            repr_enemy(current_enemy);
+        }
+        player_attack = roll_dice(6) + roll_dice(6) + player->dp;
+        enemy_attack = roll_dice(6) + roll_dice(6) + current_enemy->dp;
         hit = BASE_HIT;
-        if (manual) {
-            // ask here for possible escape
+        if (manually) {
+            // ask here for escape intent
         }
-        if (player->attack == current_enemy->attack) {
-            // report tie if detailled or manual
-            // move to next enemy if they're attacking together
-            continue;
-        }
-        if (player->attack > current_enemy->attack) {
-            // place to manual options
-            if ((current_enemy->dp -= hit) < 1) {
-                current_enemy = current_enemy->next;
-                dereference(player->roster, current_enemy);
-                enlist(player->beaten, current_enemy);
+        if (player_attack == enemy_attack) {
+            if (detailled) {
+                puts("Döntetlen kör!");
             }
-        } else if (player->attack < current_enemy->attack) {
-            // place to manual options
-            if ((player->dp -= hit) < 1) {
+        } else if (player_attack > enemy_attack) {
+            if (detailled) {
+                puts("Te nyerted a kört!");
+            }
+            if (manually) {
+                // ask here for lucky trial if in manual mode and modify attack hit
+            }
+            current_enemy->hp -= hit;
+            if (current_enemy->hp < 1) {
+                if (detailled) {
+                    puts("Megölted az ellenfeledet!");
+                }
+                next_enemy = current_enemy->next;
+                player->beaten = enlist(player->beaten, current_enemy);
+                player->roster = dereference(player->roster, current_enemy);
+            }
+        } else {
+            if (detailled) {
+                puts("Ellenfeled nyerte a kört!");
+            }
+            if (manually) {
+                // ask here for lucky trial if in manual mode and modify attack hit
+            }
+            player->hp -= hit;
+            if (player->hp < 1) {
+                puts("Ellenfeled megölt!");
                 return false;
             }
         }
         if (separately) {
             continue;
+        } else {
+            next_enemy = current_enemy->next == NULL ? player->roster : current_enemy->next;
         }
-        current_enemy = current_enemy->next == NULL ? player->roster : current_enemy->next;
-    }*/
+    }
     return true;
 }
 

@@ -61,6 +61,7 @@ enemy *enlist(enemy*, enemy*); /* add a new enemy to list */
 void repr_player(player*); /* short representation of the player */
 void repr_enemy(enemy*); /* short representation of an enemy */
 enemy *dereference(enemy*, enemy*); /* remove reference of an enemy from list (without freeing) */
+bool enemy_kills(player*, int); /* check wether enemy kills the player with its blow */
 void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
 
 struct item {
@@ -200,7 +201,7 @@ int menu_of(int argc, ...) {
     for (i = 0; i < argc; ++i) {
         printf("[%d] %s\n", i + 1, va_arg(menup, char*));
     }
-    printf("[%d] kilépés\n", i + 1);
+    printf("[%d] vissza\n", i + 1);
     puts(LINE);
     while (1) {
         choice = toint(answer("választásod"));
@@ -623,7 +624,15 @@ bool fight(player *player) {
                 player->name, player_attack, current_enemy->name, enemy_attack);
         }
         if (manually) {
-            // ask here for escape intent
+            if (menu_of(1, "szökés") == 1) {
+                if (enemy_kills(player, hit)) {
+                    puts("Menekülés közben az ellenfeled halálos csapást mért rád!");
+                    return false;
+                } else {
+                    puts("Bár ellenfeled még utoljára megsebzett, sikerült elmenekülnöd!");
+                    return true;
+                }
+            }
         }
         if (player_attack == enemy_attack) {
             if (detailled) {
@@ -652,10 +661,9 @@ bool fight(player *player) {
             if (manually) {
                 // ask here for lucky trial if in manual mode and modify attack hit
             }
-            player->hp -= hit;
-            if (player->hp < 1) {
+            if (enemy_kills(player, hit)) {
                 if (detailled) {
-                    puts("Ellenfeled megölt!");
+                    puts("Ellenfeled megölt a csatában!");
                 }
                 return false;
             }
@@ -728,6 +736,14 @@ enemy *dereference(enemy *head, enemy *defeated) {
         prev = p;
     }
     return head;
+}
+
+bool enemy_kills(player *player, int hit) {
+    player->hp -= hit;
+    if (player->hp < 1) {
+        return true;
+    }
+    return false;
 }
 
 /*void enemies2csv(enemy* head, FILE *fp) {

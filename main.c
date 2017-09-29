@@ -42,7 +42,7 @@ item *setup(item*); /* setup default inventory according to game rules */
 item *lookup(item*, char*); /* look for item after it's name */
 void items2csv(item*, FILE*); /* convert item data into csv */
 int getcsv(FILE*); /* get a csv line from file */
-void free_inventory(item*); /* delete all items in the inventory (before load) */
+void free_inventory(item*); /* delete all items in the inventory */
 item *potion(item*); /* let the player to choose a potion */
 item *inventory_menu(player*); /* handle the inventory: take, drop, use items */
 item *new2inventory(item*); /* create and add a new item to the inventory */
@@ -56,13 +56,14 @@ void luckmenu(player*); /* handle any dice roll related tasks */
 int lucktrial(player*); /* try your luck according to game rules */
 void dice_roll(void); /* roll two dices, display them and their sum */
 bool fight(player*); /* fighting procedure, returns true if player wins */
-enemy *encounter(char*, int, int); /* create a new enemy struct */
+enemy *encounter(char*, int, int, int, int); /* create a new enemy struct */
 enemy *enlist(enemy*, enemy*); /* add a new enemy to list */
 void repr_player(player*); /* short representation of the player */
 void repr_enemy(enemy*); /* short representation of an enemy */
 enemy *dereference(enemy*, enemy*); /* remove reference of an enemy from list (without freeing) */
 bool enemy_kills(player*, int); /* check wether enemy kills the player with its blow */
 void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
+void chronicle(enemy*); /* list all beaten enemies */
 
 struct item {
     char name[MAX_ANSWER];
@@ -114,7 +115,7 @@ int main() {
         system("clear");
         title(TITLE);
         status(&player);
-        switch (menu_of(5, "új játékos indítása", "harc", "felszerelés", "ellenségek", "dobókocka")) {
+        switch (menu_of(5, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka")) {
             case 1:
                 create(&player);
                 player.inventory = setup(player.inventory);
@@ -122,9 +123,11 @@ int main() {
                 break;
             case 2:
                 if (fight(&player)) {
+                    save(&player);
                     break;
                 } else {
                     puts("A kalandod sajnos véget ért!");
+                    save(&player);
                     exit(0);
                 }
                 break;
@@ -132,7 +135,7 @@ int main() {
                 player.inventory = inventory_menu(&player);
                 break;
             case 4:
-                puts("ellenségek");
+                chronicle(player.beaten);
                 break;
             case 5:
                 luckmenu(&player);
@@ -148,7 +151,7 @@ int main() {
 void load(player *player) {
     FILE *fp;
     char **p, name[MAX_ANSWER];
-    int n, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp;
+    int n, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp, dp, hp;
     fp = fopen(SAVEFILE, "r");
     if (fp != NULL) {
         /* restore player's attributes */
@@ -162,7 +165,6 @@ void load(player *player) {
         player->initial_hp = atoi(*++p);
         player->initial_lp = atoi(*++p);
         /* restore inventory */
-        free_inventory(player->inventory);
         n = getcsv(fp) / ITEM_ATTR; /* an item has seven attributes */
         p = csvfield;
         while (n--) {
@@ -175,6 +177,17 @@ void load(player *player) {
             mod_lp= atoi(*p++);
             player->inventory = take(player->inventory,
                 new(name, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp));
+        }
+        /* restore beaten enemies */
+        n = getcsv(fp) / ENEMY_ATTR; /* enemies have five attributes */
+        p = csvfield;
+        while (n--) {
+            strcpy(name, *p);
+            mod_dp = atoi(*++p);
+            mod_hp = atoi(*++p);
+            dp = atoi(*++p);
+            hp = atoi(*++p);
+            player->beaten = enlist(player->beaten, encounter(name, mod_dp, mod_hp, dp, hp));
         }
         fclose(fp);
     }
@@ -247,6 +260,7 @@ void save(player *player) {
             player->initial_dp, player->initial_hp, player->initial_lp);
         /* save inventory in the second line */
         items2csv(player->inventory, fp);
+        enemies2csv(player->beaten, fp);
         fclose(fp);
     } else {
         puts("Some really nasty error occured.");
@@ -374,7 +388,7 @@ item *inventory_menu(player *player) {
             }        
 
             /* exit from inventory menu */
-            printf("[%d] kilépés\n", i);
+            printf("[%d] vissza\n", i);
 
             puts(LINE);
             choice = toint(answer("választásod"));
@@ -604,7 +618,7 @@ bool fight(player *player) {
         strcpy(name, answer("ellenfeled neve"));
         dp = toint(answer("    - ügyessége"));
         hp = toint(answer("    - életereje"));
-        player->roster = enlist(player->roster, encounter(name, dp, hp));
+        player->roster = enlist(player->roster, encounter(name, dp, hp, dp, hp));
     }
     
     /* battle loop */
@@ -716,13 +730,13 @@ bool fight(player *player) {
     return true;
 }
 
-enemy *encounter(char *name, int dp, int hp) {
+enemy *encounter(char *name, int dp, int hp, int initial_dp, int initial_hp) {
     enemy *newenemy;
     newenemy = malloc(sizeof(enemy));
     if (newenemy != NULL) {
         strcpy(newenemy->name, name);
-        newenemy->initial_dp = dp;
-        newenemy->initial_hp = hp;
+        newenemy->initial_dp = initial_dp;
+        newenemy->initial_hp = initial_hp;
         newenemy->dp = dp;
         newenemy->hp = hp;
         newenemy->next = NULL;
@@ -785,11 +799,25 @@ bool enemy_kills(player *player, int hit) {
     return false;
 }
 
-/*void enemies2csv(enemy* head, FILE *fp) {
+void enemies2csv(enemy* head, FILE *fp) {
     enemy *p; // preserve head
     for (p = head; p != NULL; p = p->next) {
-        fprintf(fp, "%s;%d;%d;%d;%d;", p->name, p->initial_dp, p->initial_hp, p->dp, p->hp);
+        fprintf(fp, "%s;%d;%d;%d;%d;", p->name, p->dp, p->hp, p->initial_dp, p->initial_hp);
     }
     fseek(fp, -1, SEEK_CUR); // remove ending semicolon
     fputc('\n', fp);
-}*/
+}
+
+void chronicle(enemy *head) {
+    enemy *p; // preserve head
+    system("clear");
+    puts("Legyőzött ellenségeid:");
+    puts(LINE);
+    for (p = head; p != NULL; p = p->next) {
+        repr_enemy(p);
+        puts("");
+    }
+    puts(LINE);
+    puts("Nyomj Enter-t!");
+    while ((getchar() != '\n'));
+}

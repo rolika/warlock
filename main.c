@@ -182,11 +182,11 @@ void load(player *player) {
         n = getcsv(fp) / ENEMY_ATTR; /* enemies have five attributes */
         p = csvfield;
         while (n--) {
-            strcpy(name, *p);
-            mod_dp = atoi(*++p);
-            mod_hp = atoi(*++p);
-            dp = atoi(*++p);
-            hp = atoi(*++p);
+            strcpy(name, *p++);
+            mod_dp = atoi(*p++);
+            mod_hp = atoi(*p++);
+            dp = atoi(*p++);
+            hp = atoi(*p++);
             player->beaten = enlist(player->beaten, encounter(name, mod_dp, mod_hp, dp, hp));
         }
         fclose(fp);

@@ -20,7 +20,8 @@ enum {
     MAX_LP = 12,
     ADD_VALUE = 6,
     ENEMY_ATTR = 5,
-    BASE_HIT = 2
+    BASE_HIT = 2,
+    LAST_PARAGRAPH = 400
 };
 
 #define roll_dice(n) (rand() % (n) + 1)
@@ -117,7 +118,7 @@ int main() {
     load(&player);
 
     /* main menu */
-    while (1) {
+    while (player.progress != LAST_PARAGRAPH) {
         system("clear");
         title(TITLE);
         status(&player);
@@ -168,7 +169,7 @@ int main() {
                 exit(0);
         }
     }
-
+    puts("Gratulálok, megnyerted a játékot!");
     return 0;
 }
 

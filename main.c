@@ -173,23 +173,23 @@ void load(player *player) {
         getcsv(fp);
         p = csvfield;
         strcpy(player->name, *p);
-        player->dp = atoi(*++p);
-        player->hp = atoi(*++p);
-        player->lp = atoi(*++p);
-        player->initial_dp = atoi(*++p);
-        player->initial_hp = atoi(*++p);
-        player->initial_lp = atoi(*++p);
+        player->dp = toint(*++p);
+        player->hp = toint(*++p);
+        player->lp = toint(*++p);
+        player->initial_dp = toint(*++p);
+        player->initial_hp = toint(*++p);
+        player->initial_lp = toint(*++p);
         /* restore inventory */
         n = getcsv(fp) / ITEM_ATTR; /* an item has seven attributes */
         p = csvfield;
         while (n--) {
             strcpy(name, *p++);
-            quantity = atoi(*p++);
-            initial_charge = atoi(*p++);
-            charge = atoi(*p++);
-            mod_dp = atoi(*p++);
-            mod_hp = atoi(*p++);
-            mod_lp= atoi(*p++);
+            quantity = toint(*p++);
+            initial_charge = toint(*p++);
+            charge = toint(*p++);
+            mod_dp = toint(*p++);
+            mod_hp = toint(*p++);
+            mod_lp= toint(*p++);
             player->inventory = take(player->inventory,
                 new(name, quantity, initial_charge, charge, mod_dp, mod_hp, mod_lp));
         }
@@ -198,10 +198,10 @@ void load(player *player) {
         p = csvfield;
         while (n--) {
             strcpy(name, *p++);
-            mod_dp = atoi(*p++);
-            mod_hp = atoi(*p++);
-            dp = atoi(*p++);
-            hp = atoi(*p++);
+            mod_dp = toint(*p++);
+            mod_hp = toint(*p++);
+            dp = toint(*p++);
+            hp = toint(*p++);
             player->beaten = enlist(player->beaten, encounter(name, mod_dp, mod_hp, dp, hp));
         }
         /* restore progress */

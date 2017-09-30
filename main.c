@@ -64,6 +64,7 @@ enemy *dereference(enemy*, enemy*); /* remove reference of an enemy from list (w
 bool enemy_kills(player*, int); /* check wether enemy kills the player with its blow */
 void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
 void chronicle(enemy*); /* list all beaten enemies */
+void progress(player*); /* save and show player's progress (paragraph) in the game */
 
 struct item {
     char name[MAX_ANSWER];
@@ -93,6 +94,7 @@ struct player {
     int dp;
     int hp;
     int lp;
+    int progress;
     item *inventory; // implemented as a linked list
     enemy *roster; // linked list holding current enemies
     enemy *beaten; // linked list holding all defeated enemies
@@ -108,6 +110,7 @@ int main() {
     player.inventory = NULL;
     player.roster = NULL;
     player.beaten = NULL;
+    player.progress = 1;
     load(&player);
 
     /* main menu */
@@ -115,7 +118,7 @@ int main() {
         system("clear");
         title(TITLE);
         status(&player);
-        switch (menu_of(5, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka")) {
+        switch (menu_of(6, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka", "játékállás")) {
             case 1:
                 create(&player);
                 player.inventory = setup(player.inventory);
@@ -147,6 +150,12 @@ int main() {
                 }
                 break;
             case 6:
+                if (player.hp > 0) {
+                    progress(&player);
+                    save(&player);
+                }
+                break;
+            case 7:
                 exit(0);
         }
     }
@@ -195,6 +204,10 @@ void load(player *player) {
             hp = atoi(*p++);
             player->beaten = enlist(player->beaten, encounter(name, mod_dp, mod_hp, dp, hp));
         }
+        /* restore progress */
+        getcsv(fp);
+        p = csvfield;
+        player->progress = toint(*p++);
         fclose(fp);
     }
 }
@@ -266,6 +279,7 @@ void save(player *player) {
         /* save inventory in the second line */
         items2csv(player->inventory, fp);
         enemies2csv(player->beaten, fp);
+        fprintf(fp, "%d\n", player->progress);
         fclose(fp);
     } else {
         puts("Some really nasty error occured.");
@@ -824,4 +838,13 @@ void chronicle(enemy *head) {
     puts(LINE);
     puts("Nyomj Enter-t!");
     while ((getchar() != '\n'));
+}
+
+void progress(player *player) {
+    system("clear");
+    printf("Jelenleg a %d. bekezdésnél tartasz.\n", player->progress);
+    switch (menu_of(1, "állás mentése")) {
+        case 1:
+            player->progress = toint(answer("Új bekezdés"));
+    }
 }

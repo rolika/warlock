@@ -252,7 +252,6 @@ void create(player *player) {
 
 void save(player *player) {
     FILE *fp;
-
     if ((fp = fopen(SAVEFILE, "w")) != NULL) {
         /* save basic attributes in the first line */
         fprintf(fp, "%s;%d;%d;%d;%d;%d;%d\n",
@@ -266,12 +265,11 @@ void save(player *player) {
         puts("Some really nasty error occured.");
         puts("Unable to save to file.");
         exit(1);
-    }
-
-    
+    }    
 }
 
-item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, int mod_hp, int mod_lp) {
+item *new(char *name, int quantity, int initial_charge, int charge, int mod_dp, int mod_hp,
+    int mod_lp) {
     item *newitem;
     newitem = malloc(sizeof(item));
     if (newitem != NULL) {
@@ -325,10 +323,10 @@ item *lookup(item *head, char *name) {
 }
 
 void items2csv(item* head, FILE *fp) {
-    item *p; // preserve head
-    for (p = head; p != NULL; p = p->next) {
+    for (; head != NULL; head = head->next) {
         fprintf(fp, "%s;%d;%d;%d;%d;%d;%d;",
-            p->name, p->quantity, p->initial_charge, p->charge, p->mod_dp, p->mod_hp, p->mod_lp);
+            head->name, head->quantity, head->initial_charge, head->charge, head->mod_dp, 
+            head->mod_hp, head->mod_lp);
     }
     fseek(fp, -1, SEEK_CUR); // remove ending semicolon
     fputc('\n', fp);
@@ -459,7 +457,8 @@ item *itemmenu(player *player, int choice) {
 }
 
 void consume(player *player, item *item) {
-    if (item->charge > 0 && item->quantity > 0) { /* only item with a valid charge value can be consumed */
+    /* only item with a valid charge value may be consumed */
+    if (item->charge > 0 && item->quantity > 0) {
         --item->charge;
         if (item->mod_dp) {
             player->dp += item->mod_dp;
@@ -800,21 +799,20 @@ bool enemy_kills(player *player, int hit) {
 }
 
 void enemies2csv(enemy* head, FILE *fp) {
-    enemy *p; // preserve head
-    for (p = head; p != NULL; p = p->next) {
-        fprintf(fp, "%s;%d;%d;%d;%d;", p->name, p->dp, p->hp, p->initial_dp, p->initial_hp);
+    for (; head != NULL; head = head->next) {
+        fprintf(fp, "%s;%d;%d;%d;%d;", head->name, head->dp, head->hp, head->initial_dp, 
+            head->initial_hp);
     }
     fseek(fp, -1, SEEK_CUR); // remove ending semicolon
     fputc('\n', fp);
 }
 
 void chronicle(enemy *head) {
-    enemy *p; // preserve head
     system("clear");
     puts("Legyőzött ellenségeid:");
     puts(LINE);
-    for (p = head; p != NULL; p = p->next) {
-        repr_enemy(p);
+    for (; head != NULL; head = head->next) {
+        repr_enemy(head);
         puts("");
     }
     puts(LINE);

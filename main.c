@@ -65,6 +65,7 @@ bool enemy_kills(player*, int); /* check wether enemy kills the player with its 
 void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
 void chronicle(enemy*); /* list all beaten enemies */
 void progress(player*); /* save and show player's progress (paragraph) in the game */
+void free_beaten(enemy*); /* delete list of beaten enemies */
 
 struct item {
     char name[MAX_ANSWER];
@@ -249,6 +250,8 @@ void create(player *player) {
     player->hp = player->initial_hp = 0;
     player->lp = player->initial_lp = 0;
     free_inventory(player->inventory);
+    player->progress = 1;
+    free_beaten(player->beaten);
     
     system("clear");
     status(player);
@@ -819,12 +822,14 @@ bool enemy_kills(player *player, int hit) {
 }
 
 void enemies2csv(enemy* head, FILE *fp) {
-    for (; head != NULL; head = head->next) {
-        fprintf(fp, "%s;%d;%d;%d;%d;", head->name, head->dp, head->hp, head->initial_dp, 
-            head->initial_hp);
+    if (head != NULL) {
+        for (; head != NULL; head = head->next) {
+            fprintf(fp, "%s;%d;%d;%d;%d;", head->name, head->dp, head->hp, head->initial_dp, 
+                head->initial_hp);
+        }
+        fseek(fp, -1, SEEK_CUR); // remove ending semicolon
+        fputc('\n', fp);
     }
-    fseek(fp, -1, SEEK_CUR); // remove ending semicolon
-    fputc('\n', fp);
 }
 
 void chronicle(enemy *head) {
@@ -846,5 +851,13 @@ void progress(player *player) {
     switch (menu_of(1, "állás mentése")) {
         case 1:
             player->progress = toint(answer("Új bekezdés"));
+    }
+}
+
+void free_beaten(enemy *head) {
+    enemy *next;
+    for (; head != NULL; head = next) {
+        next = head->next;
+        free(head);
     }
 }

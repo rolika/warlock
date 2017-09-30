@@ -49,6 +49,7 @@ item *new2inventory(item*); /* create and add a new item to the inventory */
 char *answer(char*); /* ask player a question, store the answer in the buffer */
 item *itemmenu(player*, int); /* handle items in the inventory */
 void consume(player*, item*); /* consume an item */
+void adjust_attr(player*); /* make sure player's attributes aren't higher than initial values */
 item *drop(item*, item*); /* drop an item from inventory (decrease its quantity) */
 item *purge(item*); /* remove all 0-quantity items from inventory */
 void repr_item(item*, int); /* short, numbered representation of an item in one line */
@@ -66,6 +67,7 @@ void enemies2csv(enemy*, FILE*); /* convert enemy struct to csv */
 void chronicle(enemy*); /* list all beaten enemies */
 void progress(player*); /* save and show player's progress (paragraph) in the game */
 void free_beaten(enemy*); /* delete list of beaten enemies */
+void mod_attr(player*); /* modify player's base attributes */
 
 struct item {
     char name[MAX_ANSWER];
@@ -119,7 +121,7 @@ int main() {
         system("clear");
         title(TITLE);
         status(&player);
-        switch (menu_of(6, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka", "játékállás")) {
+        switch (menu_of(7, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka", "játékállás", "tulajdonságok módosítása")) {
             case 1:
                 create(&player);
                 player.inventory = setup(player.inventory);
@@ -157,6 +159,12 @@ int main() {
                 }
                 break;
             case 7:
+                if (player.hp > 0) {
+                    mod_attr(&player);
+                    save(&player);
+                }
+                break;
+            case 8:
                 exit(0);
         }
     }
@@ -481,21 +489,12 @@ void consume(player *player, item *item) {
         --item->charge;
         if (item->mod_dp) {
             player->dp += item->mod_dp;
-            if (player->dp > player->initial_dp) {
-                player->dp = player->initial_dp;
-            }
         }
         if (item->mod_hp) {
             player->hp += item->mod_hp;
-            if (player->hp > player->initial_hp) {
-                player->hp = player->initial_hp;
-            }
         }
         if (item->mod_lp) {
             player->lp += item->mod_lp;
-            if (player->lp > player->initial_lp) {
-                player->lp = player->initial_lp;
-            }
         }
         if (strcmp(item->name, "szerencse-varázsital") == 0) {
             ++(player->initial_lp);
@@ -506,6 +505,19 @@ void consume(player *player, item *item) {
                 item->charge = item->initial_charge;
             }
         }
+        adjust_attr(player);
+    }
+}
+
+void adjust_attr(player *player) {
+    if (player->dp > player->initial_dp) {
+        player->dp = player->initial_dp;
+    }
+    if (player->hp > player->initial_hp) {
+        player->hp = player->initial_hp;
+    }
+    if (player->lp > player->initial_lp) {
+        player->lp = player->initial_lp;
     }
 }
 
@@ -855,5 +867,39 @@ void free_beaten(enemy *head) {
     for (; head != NULL; head = next) {
         next = head->next;
         free(head);
+    }
+}
+
+void mod_attr(player *player) {
+    system("clear");
+    status(player);
+    int init = menu_of(2, "aktuális", "kezdeti");
+    int attr = menu_of(3, "ügyesség", "életerő", "szerencse");
+    int mod = toint(answer("változás"));
+    if (init == 1) {
+        switch (attr) {
+            case 1:
+                player->dp += mod;
+                break;
+            case 2:
+                player->hp += mod;
+                break;
+            case 3:
+                player->lp += mod;
+                break;
+        }
+        adjust_attr(player);
+    } else if (init == 2) {
+        switch (attr) {
+            case 1:
+                player->initial_dp += mod;
+                break;
+            case 2:
+                player->initial_hp += mod;
+                break;
+            case 3:
+                player->initial_lp += mod;
+                break;
+        }
     }
 }

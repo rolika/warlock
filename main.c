@@ -122,23 +122,29 @@ int main() {
                 save(&player);
                 break;
             case 2:
-                if (fight(&player)) {
-                    save(&player);
-                    break;
-                } else {
-                    puts("A kalandod sajnos véget ért!");
-                    save(&player);
-                    exit(0);
+                if (player.hp > 0) {
+                    if (fight(&player)) {
+                        save(&player);
+                        break;
+                    } else {
+                        puts("A kalandod sajnos véget ért!");
+                        save(&player);
+                        exit(0);
+                    }
                 }
                 break;
             case 3:
-                player.inventory = inventory_menu(&player);
+                if (player.hp > 0) {
+                    player.inventory = inventory_menu(&player);
+                }
                 break;
             case 4:
                 chronicle(player.beaten);
                 break;
             case 5:
-                luckmenu(&player);
+                if (player.hp > 0) {
+                    luckmenu(&player);
+                }
                 break;
             case 6:
                 exit(0);

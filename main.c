@@ -180,6 +180,7 @@ void load(player *player) {
         player->initial_dp = toint(*++p);
         player->initial_hp = toint(*++p);
         player->initial_lp = toint(*++p);
+        player->progress = toint(*++p);
         /* restore inventory */
         n = getcsv(fp) / ITEM_ATTR; /* an item has seven attributes */
         p = csvfield;
@@ -205,10 +206,6 @@ void load(player *player) {
             hp = toint(*p++);
             player->beaten = enlist(player->beaten, encounter(name, mod_dp, mod_hp, dp, hp));
         }
-        /* restore progress */
-        getcsv(fp);
-        p = csvfield;
-        player->progress = toint(*p++);
         fclose(fp);
     }
 }
@@ -276,13 +273,12 @@ void save(player *player) {
     FILE *fp;
     if ((fp = fopen(SAVEFILE, "w")) != NULL) {
         /* save basic attributes in the first line */
-        fprintf(fp, "%s;%d;%d;%d;%d;%d;%d\n",
+        fprintf(fp, "%s;%d;%d;%d;%d;%d;%d;%d\n",
             player->name, player->dp, player->hp, player->lp,
-            player->initial_dp, player->initial_hp, player->initial_lp);
+            player->initial_dp, player->initial_hp, player->initial_lp, player->progress);
         /* save inventory in the second line */
         items2csv(player->inventory, fp);
         enemies2csv(player->beaten, fp);
-        fprintf(fp, "%d\n", player->progress);
         fclose(fp);
     } else {
         puts("Some really nasty error occured.");

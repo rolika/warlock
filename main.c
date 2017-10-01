@@ -857,9 +857,8 @@ void chronicle(enemy *head) {
 void progress(player *player) {
     system("clear");
     printf("Jelenleg a %d. bekezdésnél tartasz.\n", player->progress);
-    switch (menu_of(1, "állás mentése")) {
-        case 1:
-            player->progress = toint(answer("Új bekezdés"));
+    if (menu_of(1, "állás mentése") == 1) {
+        player->progress = toint(answer("Új bekezdés"));
     }
 }
 

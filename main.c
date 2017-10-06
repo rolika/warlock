@@ -165,7 +165,7 @@ int main() {
                     save(&player);
                 }
                 break;
-            case 8:
+            default:
                 exit(0);
         }
     }
@@ -237,14 +237,14 @@ int menu_of(int argc, ...) {
     va_start(menup, argc);
     puts("választási lehetőségeid:");
     puts(LINE);
+    puts("[Enter] mégsem");
     for (i = 0; i < argc; ++i) {
         printf("[%d] %s\n", i + 1, va_arg(menup, char*));
     }
-    printf("[%d] vissza\n", i + 1);
     puts(LINE);
     while (1) {
         choice = toint(answer("választásod"));
-        if (0 < choice && choice <= argc + 1) {
+        if (0 <= choice && choice <= argc) {
             return choice;
         }
     }
@@ -264,6 +264,7 @@ void create(player *player) {
 
     printf("Mi a neved, kalandor? ");
     scanf("%32s", player->name);
+    getc(stdin); /* catch that pesky enter!!! */
 
     player->initial_dp = roll_dice(6) + ADD_VALUE;
     player->dp = player->initial_dp;
@@ -338,7 +339,6 @@ item *setup(item* head) {
     head = take(head, new("bőrpáncél", 1, -1, -1, 0, 0, 0)); /* add leather armour */
     head = take(head, new("élelem", 1, 10, 10, 0, 4, 0)); /* add ten units of food */
     puts("Megkaptad a kardodat, a bőrpáncélodat és a tíz adag élelmet.");
-    puts("Válassz egyet a varázsitalok közül!");
     head = potion(head); /* choose a potion and add to inventory */
     return head;
 }
@@ -381,6 +381,8 @@ void free_inventory(item *head) {
 }
 
 item *potion(item *head) {
+    puts("Válassz egyet a varázsitalok közül!");
+    again:
     switch (menu_of(3, "ügyesség", "életerő", "szerencse")) {
         case 1:
             head = take(head, new("ügyesség-varázsital", 1, 2, 2, MAX_DP, 0, 0));
@@ -388,9 +390,11 @@ item *potion(item *head) {
         case 2:
             head = take(head, new("életerő-varázsital", 1, 2, 2, 0, MAX_HP, 0));
             break;
-        case 3: /* fall through */
-        default:
+        case 3:
             head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, MAX_LP));
+            break;
+        default:
+            goto again; /* ugly but effective */
     }
     return head;
 }
@@ -624,7 +628,7 @@ bool fight(player *player) {
         case 3:
             manually = true;
             break;
-        case 4:
+        default:
             return true;
     }
 
@@ -717,6 +721,7 @@ bool fight(player *player) {
                             break;
                     }
                 }
+                // insert manual hit mod here (display the dice rolls, ask for mod, enter for none)
             }
             current_enemy->hp -= hit;
             if (current_enemy->hp < 1) {
@@ -744,6 +749,7 @@ bool fight(player *player) {
                             break;
                     }
                 }
+                // insert manual hit mod here (display the dice rolls, ask for mod, enter for none)
             }
             if (enemy_kills(player, hit)) {
                 if (detailled) {
@@ -874,7 +880,13 @@ void mod_attr(player *player) {
     system("clear");
     status(player);
     int init = menu_of(2, "aktuális", "kezdeti");
+    if (!init) {
+        return;
+    }
     int attr = menu_of(3, "ügyesség", "életerő", "szerencse");
+    if (!attr) {
+        return;
+    }
     int mod = toint(answer("változás"));
     if (init == 1) {
         switch (attr) {

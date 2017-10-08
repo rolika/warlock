@@ -721,7 +721,8 @@ bool fight(player *player) {
                             break;
                     }
                 }
-                // insert manual hit mod here (display the dice rolls, ask for mod, enter for none)
+                dice_roll();
+                hit += toint(answer("támadás módosítása"));
             }
             current_enemy->hp -= hit;
             if (current_enemy->hp < 1) {
@@ -748,8 +749,9 @@ bool fight(player *player) {
                         default:
                             break;
                     }
-                }
-                // insert manual hit mod here (display the dice rolls, ask for mod, enter for none)
+                }                
+                dice_roll();
+                hit += toint(answer("támadás módosítása"));
             }
             if (enemy_kills(player, hit)) {
                 if (detailled) {

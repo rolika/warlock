@@ -1,5 +1,5 @@
 # warlock
-Tool assist to play The Warlock of the Firetop Mountain
+Assisting tool to play The Warlock of the Firetop Mountain.
 
 This little tool helps along the way of the Fighting Fantasy book.
 

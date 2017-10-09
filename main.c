@@ -625,6 +625,8 @@ bool fight(player *player) {
         case 1:
             detailled = false;
             break;
+        case 2:
+            break;
         case 3:
             manually = true;
             break;

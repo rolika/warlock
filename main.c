@@ -410,7 +410,7 @@ item *inventory_menu(player *player) {
             puts(LINE);
 
             /* option for new equipment */
-            printf("[%d] új felszerelés\n", i++);
+            printf("[%d] mégsem\n", i++);
 
             /* list all items currently in inventory */
             for (p = player->inventory; p != NULL; p = p->next, ++i) {
@@ -418,16 +418,16 @@ item *inventory_menu(player *player) {
             }        
 
             /* exit from inventory menu */
-            printf("[%d] vissza\n", i);
+            printf("[%d] új felszerelés\n", i);
 
             puts(LINE);
             choice = toint(answer("választásod"));
 
-            if (choice == i) { /* exit inventory menu */
-                break;
-            } else if (choice == 0) { /* create and take a new item */
+            if (choice == i) {  /* create and take a new item */
                 player->inventory = new2inventory(player->inventory);
                 save(player);
+            } else if (choice == 0) { /* exit inventory menu */
+                break;
             } else { /* proceed to item menu */
                 player->inventory = itemmenu(player, choice);
                 player->inventory = purge(player->inventory);

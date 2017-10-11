@@ -122,7 +122,8 @@ int main() {
         system("clear");
         title(TITLE);
         status(&player);
-        switch (menu_of(7, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka", "játékállás", "tulajdonságok módosítása")) {
+        switch (menu_of(7, "új játékos indítása", "harc", "felszerelés", "legyőzőtt ellenségek", "dobókocka",\
+                        "játékállás", "tulajdonságok módosítása")) {
             case 1:
                 create(&player);
                 player.inventory = setup(player.inventory);

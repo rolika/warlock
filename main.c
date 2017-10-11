@@ -255,9 +255,13 @@ void create(player *player) {
     player->dp = player->initial_dp = 0;
     player->hp = player->initial_hp = 0;
     player->lp = player->initial_lp = 0;
-    free_inventory(player->inventory);
     player->progress = 1;
+    free_inventory(player->inventory);
     free_beaten(player->beaten);
+    free_beaten(player->roster);
+    player->inventory = NULL;
+    player->roster = NULL;
+    player->beaten = NULL;
     
     system("clear");
     status(player);
@@ -382,7 +386,6 @@ void free_inventory(item *head) {
 
 item *potion(item *head) {
     puts("Válassz egyet a varázsitalok közül!");
-    again:
     switch (menu_of(3, "ügyesség", "életerő", "szerencse")) {
         case 1:
             head = take(head, new("ügyesség-varázsital", 1, 2, 2, MAX_DP, 0, 0));
@@ -390,11 +393,8 @@ item *potion(item *head) {
         case 2:
             head = take(head, new("életerő-varázsital", 1, 2, 2, 0, MAX_HP, 0));
             break;
-        case 3:
-            head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, MAX_LP));
-            break;
         default:
-            goto again; /* ugly but effective */
+            head = take(head, new("szerencse-varázsital", 1, 2, 2, 0, 0, MAX_LP));
     }
     return head;
 }

@@ -4,6 +4,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define SAVEFILE "player.dat"
 #define TITLE "A  T Ű Z H E G Y   V A R Á Z S L Ó J A"
@@ -11,9 +12,9 @@
 #define TAGGED_LINE "--------------------------+-----------------+----------------+------------------"
 
 enum {
-    MAX_ANSWER = 32,
+    MAX_ANSWER = 80,
     MAX_LINE = 1000,
-    MAX_CSV_FIELD = 100,
+    MAX_CSV_FIELD = 1000,
     ITEM_ATTR = 7,
     MAX_DP = 12,
     MAX_HP = 24,
@@ -21,7 +22,8 @@ enum {
     ADD_VALUE = 6,
     ENEMY_ATTR = 5,
     BASE_HIT = 2,
-    LAST_PARAGRAPH = 400
+    LAST_PARAGRAPH = 400,
+    INT_BASE = 10
 };
 
 #define roll_dice(n) (rand() % (n) + 1)
@@ -612,8 +614,8 @@ void dice_roll(void) {
 
 bool fight(player *player) {
     bool detailled = true, manually = false, separately = true;
-    int enemies, i, hit, player_attack, enemy_attack;
-    char name[MAX_ANSWER], dp, hp;
+    int enemies, i, hit, player_attack, enemy_attack, dp, hp;
+    char name[MAX_ANSWER];
     enemy *current_enemy, *next_enemy;
 
     system("clear");
